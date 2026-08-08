@@ -41,15 +41,18 @@ from urllib.parse import parse_qs, urlparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from sqlalchemy import text  # noqa: E402
-
-from src import config, lambda_function, memory  # noqa: E402
+from src import api, config, lambda_function  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 UI = ROOT / "ui"
 
 LAMBDA_FUNCTION = os.getenv("LAMBDA_FUNCTION", "").strip()
 LAMBDA_REGION = os.getenv("LAMBDA_REGION", "ap-south-1")
+
+
+def _backend() -> str:
+    return (f"AWS Lambda · {LAMBDA_FUNCTION} ({LAMBDA_REGION})" if LAMBDA_FUNCTION
+            else "in-process")
 
 # --------------------------------------------------------------------------- #
 # Auth
@@ -82,103 +85,6 @@ def _authorised(handler: "Handler") -> bool:
 # --------------------------------------------------------------------------- #
 # Data
 # --------------------------------------------------------------------------- #
-async def _memory_stats() -> dict:
-    engine = memory.get_engine()
-    try:
-        async with engine.engine.connect() as conn:
-            by_ns = dict((await conn.execute(text(
-                f"SELECT namespace, count(*) FROM {config.VECTOR_TABLE} GROUP BY 1"))).all())
-            reviews = (await conn.execute(text(
-                f"SELECT count(*) FROM {config.AUDIT_TABLE}"))).scalar_one()
-            clients = (await conn.execute(text(
-                f"SELECT count(DISTINCT client_name) FROM {config.AUDIT_TABLE}"))).scalar_one()
-    finally:
-        await engine.aclose()
-    return {
-        "rules": by_ns.get(config.NS_RULES, 0),
-        "risks": by_ns.get(config.NS_RISKS, 0),
-        "reviews": reviews,
-        "clients": clients,
-        "mode": "mock" if config.MOCK_MODE else "live",
-        "backend": f"AWS Lambda · {LAMBDA_FUNCTION} ({LAMBDA_REGION})" if LAMBDA_FUNCTION
-                   else "in-process",
-        "auth": bool(PASSCODE),
-    }
-
-
-async def _dashboard() -> dict:
-    engine = memory.get_engine()
-    try:
-        async with engine.engine.connect() as conn:
-            async def rows(sql):
-                return [dict(r._mapping) for r in (await conn.execute(text(sql))).all()]
-
-            recent = await rows(f"""
-                SELECT ts::timestamp(0)::STRING AS ts, client_name, risk_score,
-                       decision->>'recommendation' AS recommendation,
-                       jsonb_array_length(decision->'findings') AS findings
-                FROM {config.AUDIT_TABLE} ORDER BY ts DESC LIMIT 12""")
-            top = await rows(f"""
-                SELECT f->>'clause' AS clause, (f->>'severity')::INT AS severity,
-                       count(*) AS times_flagged, count(DISTINCT client_name) AS clients
-                FROM {config.AUDIT_TABLE}, jsonb_array_elements(decision->'findings') AS f
-                GROUP BY 1, 2 ORDER BY times_flagged DESC, severity DESC LIMIT 10""")
-            clients = await rows(f"""
-                SELECT client_name, count(*) AS reviews, max(risk_score) AS worst
-                FROM {config.AUDIT_TABLE} GROUP BY 1 ORDER BY worst DESC, reviews DESC LIMIT 10""")
-    finally:
-        await engine.aclose()
-    stats = await _memory_stats()
-    return {"counts": stats, "recent": recent, "top_clauses": top, "clients": clients}
-
-
-async def _list_items(namespace: str) -> dict:
-    engine = memory.get_engine()
-    try:
-        async with engine.engine.connect() as conn:
-            result = await conn.execute(
-                text(f"SELECT id::STRING AS id, content, metadata FROM {config.VECTOR_TABLE} "
-                     "WHERE namespace = :ns "
-                     "ORDER BY (metadata->>'severity')::INT DESC NULLS LAST, content"),
-                {"ns": namespace},
-            )
-            items = [
-                {"id": r.id, "text": r.content,
-                 "severity": (r.metadata or {}).get("severity")}
-                for r in result.all()
-            ]
-    finally:
-        await engine.aclose()
-    return {"items": items}
-
-
-async def _add_item(namespace: str, severity: int, body: str) -> dict:
-    engine = memory.get_engine()
-    try:
-        store = memory.vector_store(engine, namespace)
-        kind = "rule" if namespace == config.NS_RULES else "risk"
-        await store.aadd_texts(
-            [body], metadatas=[{"kind": kind, "severity": severity, "source": "ui"}]
-        )
-    finally:
-        await engine.aclose()
-    return {"ok": True}
-
-
-async def _delete_item(namespace: str, item_id: str) -> dict:
-    engine = memory.get_engine()
-    try:
-        async with engine.engine.begin() as conn:
-            # Scoped by namespace as well as id, so a rules id can never delete a risk.
-            result = await conn.execute(
-                text(f"DELETE FROM {config.VECTOR_TABLE} WHERE id = :id AND namespace = :ns"),
-                {"id": item_id, "ns": namespace},
-            )
-    finally:
-        await engine.aclose()
-    return {"ok": True, "deleted": result.rowcount}
-
-
 def review_via_lambda(body: str) -> tuple[int, str]:
     """Invoke the deployed Lambda with the same event the Function URL would deliver."""
     import boto3
@@ -257,7 +163,7 @@ class Handler(BaseHTTPRequestHandler):
         # Counts only, no contract content — the landing page needs them before sign-in.
         if path == "/api/memory":
             try:
-                return self._json(200, asyncio.run(_memory_stats()))
+                return self._json(200, asyncio.run(api.memory_stats(_backend(), bool(PASSCODE))))
             except Exception as exc:  # noqa: BLE001 - surface DB problems in the UI banner
                 return self._json(503, {"error": f"{type(exc).__name__}: {exc}"})
 
@@ -271,7 +177,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(200, {"contract_text": sample, "client_name": "Apex Dynamics LLC"})
         if path == "/api/dashboard":
             try:
-                return self._json(200, asyncio.run(_dashboard()))
+                return self._json(200, asyncio.run(api.dashboard(_backend())))
             except Exception as exc:  # noqa: BLE001
                 return self._json(503, {"error": f"{type(exc).__name__}: {exc}"})
         if path == "/api/memory/items":
@@ -279,7 +185,7 @@ class Handler(BaseHTTPRequestHandler):
             if ns not in (config.NS_RULES, config.NS_RISKS):
                 return self._json(400, {"error": "namespace must be 'rules' or 'risks'"})
             try:
-                return self._json(200, asyncio.run(_list_items(ns)))
+                return self._json(200, asyncio.run(api.list_items(ns)))
             except Exception as exc:  # noqa: BLE001
                 return self._json(503, {"error": f"{type(exc).__name__}: {exc}"})
 
@@ -319,22 +225,15 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(status, payload.encode(), "application/json")
 
         if path == "/api/memory/items":
-            data = self._body()
-            ns = data.get("namespace")
-            body_text = str(data.get("text") or "").strip()
-            severity = data.get("severity")
-            # Validated here because this is the trust boundary for what enters the
-            # agent's beliefs — a bad row silently skews every future retrieval.
-            if ns not in (config.NS_RULES, config.NS_RISKS):
-                return self._json(400, {"error": "namespace must be 'rules' or 'risks'"})
-            if not body_text:
-                return self._json(400, {"error": "text is required"})
-            if len(body_text) > 1000:
-                return self._json(400, {"error": "text must be 1000 characters or fewer"})
-            if not isinstance(severity, int) or not 1 <= severity <= 5:
-                return self._json(400, {"error": "severity must be an integer from 1 to 5"})
+            # Validated in src/api.py because this is the trust boundary for what enters
+            # the agent's beliefs — a bad row silently skews every future retrieval — and
+            # both front doors must accept exactly the same thing.
+            checked = api.validate_item(self._body())
+            if isinstance(checked, str):
+                return self._json(400, {"error": checked})
+            ns, severity, body_text = checked
             try:
-                return self._json(200, asyncio.run(_add_item(ns, severity, body_text)))
+                return self._json(200, asyncio.run(api.add_item(ns, severity, body_text)))
             except Exception as exc:  # noqa: BLE001
                 return self._json(503, {"error": f"{type(exc).__name__}: {exc}"})
 
@@ -346,7 +245,7 @@ class Handler(BaseHTTPRequestHandler):
             if not item_id:
                 return self._json(400, {"error": "id is required"})
             try:
-                return self._json(200, asyncio.run(_delete_item(ns, item_id)))
+                return self._json(200, asyncio.run(api.delete_item(ns, item_id)))
             except Exception as exc:  # noqa: BLE001
                 return self._json(503, {"error": f"{type(exc).__name__}: {exc}"})
 

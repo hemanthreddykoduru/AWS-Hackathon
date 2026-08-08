@@ -11,8 +11,14 @@ Also runs locally with no AWS account at all:
 
 import asyncio
 import json
+import logging
+from pathlib import Path
 
-from . import graph
+from . import api, graph
+
+# Shipped inside the deployment package so the public demo can offer a sample contract
+# without a round trip to anything else.
+SAMPLE = Path(__file__).resolve().parent.parent / "sample_data" / "risky_contract.txt"
 
 MAX_CONTRACT_CHARS = 200_000  # ~50k tokens; a Lambda has 15 min and a body limit
 
@@ -65,19 +71,36 @@ def _parse(event: dict) -> tuple[str, str]:
 
 
 def handler(event, context=None):
-    if (event or {}).get("requestContext", {}).get("http", {}).get("method") == "OPTIONS":
+    event = event or {}
+    method = event.get("requestContext", {}).get("http", {}).get("method", "POST")
+    # API Gateway sends rawPath; a direct invoke sends nothing and means "review".
+    path = (event.get("rawPath") or event.get("path") or "/api/review").rstrip("/")
+
+    if method == "OPTIONS":
         return _reply(204, {})
 
+    # Read-only endpoints. The public demo is read + review; Settings writes stay on the
+    # local server, because a public write endpoint lets anyone edit the agent's beliefs.
     try:
-        contract_text, client_name = _parse(event or {})
+        if path.endswith("/api/memory"):
+            return _reply(200, asyncio.run(api.memory_stats(backend="AWS Lambda")))
+        if path.endswith("/api/dashboard"):
+            return _reply(200, asyncio.run(api.dashboard(backend="AWS Lambda")))
+        if path.endswith("/api/sample"):
+            return _reply(200, {"contract_text": SAMPLE.read_text(),
+                                "client_name": "Apex Dynamics LLC"})
+    except Exception as exc:  # noqa: BLE001 - never leak a stack trace to the caller
+        logging.exception("api call failed")
+        return _reply(503, {"error": f"{type(exc).__name__}: {exc}"})
+
+    try:
+        contract_text, client_name = _parse(event)
     except ValueError as exc:
         return _reply(400, {"error": str(exc)})
 
     try:
         decision = asyncio.run(graph.run(contract_text, client_name))
     except Exception as exc:  # noqa: BLE001 - never leak a stack trace to the caller
-        import logging
-
         logging.exception("agent run failed")
         return _reply(500, {"error": f"{type(exc).__name__}: {exc}"})
 

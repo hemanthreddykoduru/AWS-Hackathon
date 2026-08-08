@@ -79,8 +79,10 @@ else
       find . -name 'tests' -type d -prune -exec rm -rf {} + 2>/dev/null ) || true
 fi
 
-rm -rf build/pkg/src build/function.zip
+rm -rf build/pkg/src build/pkg/sample_data build/function.zip
 cp -r src build/pkg/
+# /api/sample serves the sample contract from inside the package.
+cp -r sample_data build/pkg/
 
 # Ship the CockroachDB CA inside the package. The Lambda sandbox has neither
 # ~/.postgresql/root.crt nor this CA in its system trust store, so verify-full fails

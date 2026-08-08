@@ -436,7 +436,7 @@ async function loadSettings() {
   }
   const m = await api('/api/memory').catch(() => null);
   if (m) $('#s-runtime').innerHTML = [
-    ['Analyser', m.mode === 'mock' ? 'Deterministic clause engine (no API key)' : 'Live LLM'],
+    ['Analyser', esc(m.mode)],
     ['Review backend', esc(m.backend)],
     ['Passcode protection', m.auth ? 'On' : 'Off — set APP_PASSCODE to enable'],
   ].map(([k, v]) => `<tr><td class="n" style="width:190px">${k}</td><td>${v}</td></tr>`).join('');
