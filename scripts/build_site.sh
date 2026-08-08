@@ -20,11 +20,14 @@ API_NAME="${API_NAME:-freelance-guardian-api}"
 
 cd "$(dirname "$0")/.."
 
-API_ID="$(aws apigatewayv2 get-apis --region "$REGION" \
-  --query "Items[?Name=='$API_NAME'].ApiId" --output text)"
-[ -n "$API_ID" ] && [ "$API_ID" != "None" ] || {
-  echo "no API Gateway named $API_NAME in $REGION — create it first"; exit 1; }
-API_BASE="https://$API_ID.execute-api.$REGION.amazonaws.com"
+# CI passes API_BASE directly so the deploy role needs no apigateway read permission.
+if [ -z "${API_BASE:-}" ]; then
+  API_ID="$(aws apigatewayv2 get-apis --region "$REGION" \
+    --query "Items[?Name=='$API_NAME'].ApiId" --output text)"
+  [ -n "$API_ID" ] && [ "$API_ID" != "None" ] || {
+    echo "no API Gateway named $API_NAME in $REGION — create it, or set API_BASE"; exit 1; }
+  API_BASE="https://$API_ID.execute-api.$REGION.amazonaws.com"
+fi
 echo "api   $API_BASE"
 
 rm -rf build/site && mkdir -p build/site
@@ -67,9 +70,20 @@ assert not leftovers, f"Settings not fully removed: {leftovers}"
 print("  transformed landing.html, app.html")
 PY
 
+if [ "${BUILD_ONLY:-}" = "1" ]; then
+  echo "built build/site/ (BUILD_ONLY=1, not syncing)"
+  exit 0
+fi
+
 echo "sync  s3://$SITE"
 aws s3 sync build/site/ "s3://$SITE/" --delete --region "$REGION" \
   --cache-control 'no-cache' >/dev/null
 
+if [ -n "${CLOUDFRONT_DIST:-}" ]; then
+  echo "flush CloudFront $CLOUDFRONT_DIST"
+  aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DIST" \
+    --paths '/*' --query 'Invalidation.Status' --output text
+fi
+
 echo
-echo "demo  http://$SITE.s3-website.$REGION.amazonaws.com"
+echo "demo  ${DEMO_URL:-http://$SITE.s3-website.$REGION.amazonaws.com}"

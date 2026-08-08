@@ -1,0 +1,79 @@
+name: Deploy demo site
+
+# Publishes ui/ to S3 and flushes CloudFront whenever the frontend changes.
+#
+# Authentication is OIDC — GitHub exchanges a short-lived token for the
+# freelance-guardian-gha role. No AWS access key is stored in this repository,
+# and the role is scoped to one bucket and one distribution.
+#
+# The Lambda is NOT deployed here on purpose: its package is ~37MB of compiled
+# wheels, and rebuilding that on every frontend commit would be slow and pointless.
+# Deploy it with `make deploy` when src/ changes.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ui/**'
+      - 'scripts/build_site.sh'
+      - '.github/workflows/deploy-site.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-site
+  cancel-in-progress: true
+
+permissions:
+  id-token: write      # required to request the OIDC token
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  SITE: freelance-guardian-demo-933036664603
+  CLOUDFRONT_DIST: EXPQMBYNG818K
+  API_BASE: https://sb40uj1ac3.execute-api.ap-south-1.amazonaws.com
+  DEMO_URL: https://d33f3h4ooir298.cloudfront.net
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the static site
+        run: BUILD_ONLY=1 bash scripts/build_site.sh
+
+      - name: Check the build before it can reach anyone
+        run: |
+          set -e
+          test -s build/site/landing.html
+          test -s build/site/app.html
+          test -s build/site/theme.css
+          # A missing API base ships a site whose every request 404s against S3.
+          grep -q "$API_BASE" build/site/app.html
+          grep -q "$API_BASE" build/site/landing.html
+          # Settings must not reach the public build — it writes to the agent's memory.
+          ! grep -q 'data-tab="settings"' build/site/app.html
+          ! test -e build/site/login.html
+          echo "build verified"
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::933036664603:role/freelance-guardian-gha
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Publish
+        run: bash scripts/build_site.sh
+
+      - name: Confirm the deployed site answers
+        run: |
+          set -e
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$DEMO_URL/")
+            echo "attempt $i: HTTP $code"
+            [ "$code" = "200" ] && break
+            sleep 15
+          done
+          [ "$code" = "200" ]
+          echo "### Demo deployed" >> $GITHUB_STEP_SUMMARY
+          echo "$DEMO_URL" >> $GITHUB_STEP_SUMMARY
