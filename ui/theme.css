@@ -5,6 +5,9 @@
   --paper:#FAF9F6; --ink:#171412; --muted:#6D665E; --line:#E5DFD7;
   --accent:#F26522; --accent-deep:#C64F0E; --accent-soft:#FDEEE5;
   --ok:#3E9B62; --no:#C64530; --no-soft:#FBEAE6; --r:4px;
+  /* A permanently dark band, identical in both themes — used where the page
+     deliberately inverts (the reasoning trace, the measured-facts section). */
+  --dark:#151210; --dark-2:#1E1A17; --dark-line:#2E2924; --dark-mut:#9A9188;
   /* One content width per page. The masthead and the page body both read it,
      so the logo always sits on the same line as the content below it. */
   --page:1240px;
