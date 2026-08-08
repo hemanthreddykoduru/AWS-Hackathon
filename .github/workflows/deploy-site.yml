@@ -61,6 +61,12 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::933036664603:role/freelance-guardian-gha
           aws-region: ${{ env.AWS_REGION }}
+          role-session-name: gha-deploy-site
+          # IAM is eventually consistent; a freshly created role can 403 the first time.
+          retry-max-attempts: 5
+
+      - name: Who am I
+        run: aws sts get-caller-identity
 
       - name: Publish
         run: bash scripts/build_site.sh
