@@ -25,12 +25,16 @@
   }
   @media (prefers-reduced-motion:reduce){.mark .strike{stroke-dashoffset:0}}
 
-  #stats{display:flex;gap:16px;font-family:var(--ui);font-size:11px;color:var(--muted);flex-wrap:wrap}
+  #stats{display:flex;gap:16px;font-family:var(--ui);font-size:11px;
+    color:var(--muted);flex-wrap:wrap}
+  /* Below this the masthead wraps to two lines; the counts are the least
+     load-bearing thing there, so they go first. */
+  @media (max-width:1180px){#stats{display:none}}
   #stats b{color:var(--ink);font-weight:500}
   .dot{display:inline-block;width:7px;height:7px;background:var(--ok);margin-right:7px;vertical-align:1px}
   .dot.off{background:var(--muted)}
 
-  main{max-width:1240px;margin:0 auto;padding:0 28px}
+  main{max-width:var(--page);margin:0 auto;padding:0 28px}
   .page{display:none}.page.on{display:block}
 
   /* ---- review ---- */
@@ -44,7 +48,8 @@
   }
   textarea{line-height:1.7;min-height:360px;resize:vertical}
   .row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
-  .drop{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
+  .drop{position:relative;display:flex;align-items:center;gap:12px;
+    margin-top:10px;flex-wrap:wrap}
   .drop input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
   .filebtn{display:inline-block;font-family:var(--ui);font-size:11.5px;letter-spacing:.04em;
     padding:7px 13px;border:1px solid var(--line);border-radius:var(--r);cursor:pointer;
