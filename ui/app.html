@@ -32,6 +32,15 @@
   }
   textarea{line-height:1.7;min-height:360px;resize:vertical}
   .row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .drop{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
+  .drop input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+  .filebtn{display:inline-block;font-family:var(--ui);font-size:11.5px;letter-spacing:.04em;
+    padding:7px 13px;border:1px solid var(--line);border-radius:var(--r);cursor:pointer;
+    text-transform:none;color:var(--ink);margin:0}
+  .filebtn:hover{border-color:var(--ink)}
+  .drop input[type=file]:focus-visible + .filebtn{outline:2px solid var(--accent);outline-offset:2px}
+  #fname{font-family:var(--ui);font-size:11px}
+  #fname.err-text{color:var(--no)}
 
   #doc{font-size:14px;line-height:1.78;white-space:pre-wrap;word-wrap:break-word;
     background:var(--paper);border:1px solid var(--line);border-radius:var(--r);
@@ -147,6 +156,11 @@
         <div style="height:14px"></div>
         <label for="contract">Contract text</label>
         <textarea id="contract" placeholder="Paste the agreement here."></textarea>
+        <div class="drop">
+          <input id="file" type="file" accept=".txt,.md,.markdown,.pdf,text/plain,text/markdown,application/pdf">
+          <label for="file" class="filebtn">Choose a file</label>
+          <span id="fname" class="muted">or paste above · .txt .md .pdf</span>
+        </div>
       </div>
       <div class="row">
         <button class="btn btn-p" id="go">Review contract</button>
@@ -346,6 +360,47 @@ function render(d, contract) {
 }
 
 let lastContract = '', lastClient = 'Apex Dynamics LLC';
+let pendingPdf = null;   // base64 of an uploaded PDF, extracted server-side
+
+const MAX_PDF = 5_000_000;
+
+// .txt and .md are read here — no round trip, and you can edit before reviewing.
+// A PDF needs a text-layer extractor, so it goes to the server as base64 and the
+// extracted text comes back with the verdict.
+function bindFile() {
+  const input = $('#file');
+  if (!input) return;
+  input.addEventListener('change', async () => {
+    const f = input.files[0];
+    if (!f) return;
+    const name = f.name.toLowerCase();
+    const label = $('#fname');
+    pendingPdf = null;
+    try {
+      if (name.endsWith('.pdf')) {
+        if (f.size > MAX_PDF) throw new Error(`that PDF is ${(f.size / 1e6).toFixed(1)}MB; limit is 5MB`);
+        const buf = new Uint8Array(await f.arrayBuffer());
+        let bin = '';
+        for (let i = 0; i < buf.length; i += 8192)
+          bin += String.fromCharCode(...buf.subarray(i, i + 8192));
+        pendingPdf = btoa(bin);
+        $('#contract').value = '';
+        $('#contract').placeholder = 'Text will be extracted from the PDF when you review.';
+        label.textContent = `${f.name} · extracted on review`;
+      } else if (/\.(txt|md|markdown)$/.test(name)) {
+        $('#contract').value = await f.text();
+        label.textContent = `${f.name} · loaded`;
+      } else {
+        throw new Error('use .txt, .md or .pdf');
+      }
+      label.classList.remove('err-text');
+    } catch (e) {
+      pendingPdf = null;
+      label.textContent = e.message;
+      label.classList.add('err-text');
+    }
+  });
+}
 
 function restoreEditor(value) {
   $('#pane').innerHTML = `
@@ -353,8 +408,15 @@ function restoreEditor(value) {
     <input id="client" value="${esc(lastClient)}" autocomplete="off">
     <div style="height:14px"></div>
     <label for="contract">Contract text</label>
-    <textarea id="contract" placeholder="Paste the agreement here."></textarea>`;
+    <textarea id="contract" placeholder="Paste the agreement here."></textarea>
+    <div class="drop">
+      <input id="file" type="file" accept=".txt,.md,.markdown,.pdf,text/plain,text/markdown,application/pdf">
+      <label for="file" class="filebtn">Choose a file</label>
+      <span id="fname" class="muted">or paste above · .txt .md .pdf</span>
+    </div>`;
+  bindFile();
   $('#contract').value = value ?? lastContract;
+  pendingPdf = null;          // editing by hand supersedes an uploaded file
   $('#edit').hidden = true;
 }
 
@@ -368,7 +430,12 @@ $('#edit').onclick = () => restoreEditor();
 $('#go').onclick = async () => {
   const contract = ($('#contract')?.value ?? lastContract).trim();
   const client = ($('#client')?.value ?? lastClient).trim();
-  if (!contract || !client) {
+  if (!contract && !pendingPdf) {
+    $('#out').innerHTML = `<div class="eyebrow">Verdict</div><div class="err">
+      <b>Nothing to review.</b> Paste a contract or choose a .txt, .md or .pdf file.</div>`;
+    return;
+  }
+  if (!client) {
     $('#out').innerHTML = `<div class="eyebrow">Verdict</div><div class="err">
       <b>Nothing to review.</b> Add a client name and paste a contract, or press Load sample.</div>`;
     return;
@@ -378,9 +445,11 @@ $('#go').onclick = async () => {
   try {
     const data = await api('/api/review', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({contract_text: contract, client_name: client})
+      body: JSON.stringify(pendingPdf
+        ? {contract_pdf_b64: pendingPdf, client_name: client}
+        : {contract_text: contract, client_name: client})
     });
-    if (data) { render(data, contract); loadStats(); }
+    if (data) { render(data, data.contract_text || contract); loadStats(); }
   } catch (e) {
     $('#out').innerHTML = `<div class="eyebrow">Verdict</div><div class="err">
       <b>Review failed.</b> ${esc(e.message)}</div>`;
@@ -482,6 +551,7 @@ $('#logout').onclick = async () => {
   location.href = '/';
 };
 
+bindFile();
 route();
 loadStats();
 </script>

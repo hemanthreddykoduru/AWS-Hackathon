@@ -76,6 +76,31 @@ def get_contract(uri: str) -> str:
     return obj["Body"].read().decode()
 
 
+def pdf_to_text(data: bytes) -> str:
+    """Extract text from an uploaded PDF.
+
+    ponytail: text-layer only. A scanned contract is images, and this returns nothing
+    for it rather than pretending — the caller reports that instead of reviewing a
+    blank document. OCR is a different project.
+    """
+    import io
+
+    from pypdf import PdfReader
+
+    try:
+        reader = PdfReader(io.BytesIO(data))
+    except Exception as exc:  # noqa: BLE001 - malformed upload, not our bug
+        raise ValueError(f"could not read that PDF: {exc}") from exc
+
+    text = "\n\n".join(page.extract_text() or "" for page in reader.pages).strip()
+    if not text:
+        raise ValueError(
+            "that PDF has no extractable text — it is probably a scan. "
+            "Paste the text instead."
+        )
+    return text
+
+
 # Contracts are numbered clauses far more often than they are flowing prose, so split
 # on clause headings first and fall back to blank lines for anything unstructured.
 _CLAUSE_HEADING = re.compile(r"\n(?=\s*\d+\.\s+[A-Z])")

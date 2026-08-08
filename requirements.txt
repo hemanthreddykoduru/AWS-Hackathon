@@ -9,6 +9,9 @@ psycopg[binary]>=3.2
 # AWS Lambda + S3
 boto3>=1.34
 
+# PDF uploads on the Review page (text layer only — no OCR)
+pypdf>=5.1
+
 # Config
 python-dotenv>=1.0
 

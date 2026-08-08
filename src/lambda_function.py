@@ -14,13 +14,14 @@ import json
 import logging
 from pathlib import Path
 
-from . import api, graph
+from . import api, graph, s3
 
 # Shipped inside the deployment package so the public demo can offer a sample contract
 # without a round trip to anything else.
 SAMPLE = Path(__file__).resolve().parent.parent / "sample_data" / "risky_contract.txt"
 
 MAX_CONTRACT_CHARS = 200_000  # ~50k tokens; a Lambda has 15 min and a body limit
+MAX_PDF_BYTES = 5_000_000     # API Gateway caps the request body at 10MB; base64 adds ~33%
 
 CORS = {
     "Content-Type": "application/json",
@@ -55,8 +56,23 @@ def _parse(event: dict) -> tuple[str, str]:
     if not isinstance(data, dict):
         raise ValueError("body must be a JSON object")
 
-    contract_text = (data.get("contract_text") or "").strip()
     client_name = (data.get("client_name") or "").strip()
+
+    # A PDF arrives base64-encoded in the same request; .txt and .md are read in the
+    # browser and arrive as plain contract_text.
+    pdf_b64 = data.get("contract_pdf_b64")
+    if pdf_b64:
+        import base64
+
+        try:
+            raw = base64.b64decode(pdf_b64, validate=True)
+        except Exception as exc:  # noqa: BLE001
+            raise ValueError(f"contract_pdf_b64 is not valid base64: {exc}") from exc
+        if len(raw) > MAX_PDF_BYTES:
+            raise ValueError(f"PDF exceeds {MAX_PDF_BYTES // 1_000_000}MB")
+        contract_text = s3.pdf_to_text(raw)
+    else:
+        contract_text = (data.get("contract_text") or "").strip()
 
     if not contract_text:
         raise ValueError("contract_text is required")
@@ -93,6 +109,7 @@ def handler(event, context=None):
         logging.exception("api call failed")
         return _reply(503, {"error": f"{type(exc).__name__}: {exc}"})
 
+    pdf_used = bool((event.get("body") or "").find("contract_pdf_b64") >= 0)
     try:
         contract_text, client_name = _parse(event)
     except ValueError as exc:
@@ -104,6 +121,10 @@ def handler(event, context=None):
         logging.exception("agent run failed")
         return _reply(500, {"error": f"{type(exc).__name__}: {exc}"})
 
+    # When the text came from a PDF the browser never saw it, so hand it back —
+    # the redline needs the exact string the findings' spans index into.
+    if pdf_used:
+        decision["contract_text"] = contract_text
     return _reply(200, decision)
 
 

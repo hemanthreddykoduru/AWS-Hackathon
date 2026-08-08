@@ -95,6 +95,86 @@ CLAUSE_PATTERNS: list[tuple[str, int, str, str, str]] = [
 ]
 
 
+# --------------------------------------------------------------------------- #
+# Gap detection — what the contract does NOT say
+# --------------------------------------------------------------------------- #
+# CLAUSE_PATTERNS finds bad clauses that are present. It is blind to protections that
+# are simply missing, which is how a polished, contractor-friendly template still
+# leaves you exposed.
+#
+# Driven by the freelancer's FULL rule set, not the recalled subset. Vector search
+# returns rules resembling what the contract says, and a missing protection is by
+# definition absent from that text — gating gaps on recall makes them unable to fire.
+#
+#   (topic, matches a recalled rule, topic is addressed in the contract, severity, ask)
+COVERAGE: list[tuple[str, str, str, int, str]] = [
+    ("Portfolio rights", r"portfolio",
+     r"portfolio|case stud|showcase|promotional material", 3,
+     "Right to display non-confidential work in portfolio and case studies after launch."),
+    ("Late-payment remedy", r"late payment|interest per month|overdue",
+     r"interest|overdue|late payment|per month on", 3,
+     "2% monthly interest on overdue sums; work pauses after 14 days overdue."),
+    ("Kill fee", r"kill fee|cancels mid-project",
+     r"kill fee|cancellation fee|early termination fee", 3,
+     "50% kill fee on the remaining contract value if the client cancels mid-project."),
+    ("Deposit", r"deposit",
+     r"deposit|advance payment|upon signing|commencement", 4,
+     "30% deposit before work begins."),
+    ("Liability cap", r"liability",
+     r"liabilit|indemnif|not exceed", 4,
+     "Total liability capped at fees actually paid under this agreement."),
+    ("IP timing", r"copyright|intellectual property|ip assigns",
+     r"intellectual property|copyright|assign", 5,
+     "IP assigns on receipt of final cleared payment, not on creation."),
+    ("Revision cap", r"revision",
+     r"revision|change request|amendment", 4,
+     "Two revision rounds included; further rounds billed hourly."),
+    ("Scope definition", r"scope",
+     r"scope of services|deliverable|statement of work", 3,
+     "An itemised, written scope. Anything further is a change order."),
+]
+
+# A template still full of [placeholders] is not a contract yet — "accept as written"
+# would be a meaningless verdict when the terms are literally unwritten.
+PLACEHOLDER = re.compile(r"\[[^\]\n]{1,40}\]")
+
+
+def find_gaps(contract_text: str, rules: list[dict]) -> list[dict]:
+    """Protections your standing rules require that this contract never mentions."""
+    recalled = " ".join(r.get("text", "") for r in rules).lower()
+    body = contract_text.lower()
+    gaps = []
+    for topic, rule_pat, covered_pat, sev, ask in COVERAGE:
+        if not re.search(rule_pat, recalled):
+            continue                                   # memory did not raise this topic
+        if re.search(covered_pat, body):
+            continue                                   # the contract addresses it
+        gaps.append({
+            "clause": f"Missing: {topic}",
+            "severity": sev,
+            "issue": f"Your standing rules cover {topic.lower()}, "
+                     f"and this contract is silent on it.",
+            "counter": ask,
+            "kind": "gap",
+        })
+    return gaps
+
+
+def find_placeholders(contract_text: str) -> dict | None:
+    hits = PLACEHOLDER.findall(contract_text)
+    if len(hits) < 3:            # a stray bracket is not an unfilled template
+        return None
+    return {
+        "clause": "Unfilled template",
+        "severity": 4,
+        "issue": f"{len(hits)} placeholders are still blank "
+                 f"(e.g. {', '.join(dict.fromkeys(hits[:3]))}), so key terms are undecided.",
+        "counter": "Ask for the completed draft before reviewing — payment terms, notice "
+                   "periods and fees are all still blank.",
+        "kind": "gap",
+    }
+
+
 def _score(findings: list[dict]) -> int:
     """max severity dominates, count adds pressure.
 
@@ -133,7 +213,8 @@ def _email(client_name: str, findings: list[dict]) -> str:
 
 
 def mock_analyze(
-    contract_text: str, rules: list[dict], risks: list[dict], history: list[str], client_name: str
+    contract_text: str, rules: list[dict], risks: list[dict], history: list[str],
+    client_name: str, all_rules: list[dict] | None = None,
 ) -> dict:
     findings = []
     for name, sev, pattern, issue, counter in CLAUSE_PATTERNS:
@@ -154,6 +235,15 @@ def mock_analyze(
                 "span": [hit.start(), hit.end()],
             }
         )
+    present = len(findings)
+
+    # What the contract does not say. Driven by the rules memory actually recalled.
+    gaps = find_gaps(contract_text, all_rules if all_rules is not None else rules)
+    blank = find_placeholders(contract_text)
+    if blank:
+        gaps.append(blank)
+    findings.extend(gaps)
+
     findings.sort(key=lambda f: -f["severity"])
     score = _score(findings)
     return {
@@ -162,9 +252,10 @@ def mock_analyze(
         "findings": findings,
         "counter_offer_email": _email(client_name, findings),
         "reasoning": (
-            f"Matched {len(findings)} clause patterns against {len(rules)} retrieved rules "
-            f"and {len(risks)} recorded past risks; {len(history)} prior messages with this "
-            f"client were on file. Score {score} -> {_recommend(score)}."
+            f"Matched {present} risky clauses and {len(gaps)} missing protections against "
+            f"{len(rules)} retrieved rules and {len(risks)} recorded past risks; "
+            f"{len(history)} prior messages with this client were on file. "
+            f"Score {score} -> {_recommend(score)}."
         ),
         "mode": "mock",
     }
@@ -231,10 +322,11 @@ def _parse_json(raw: str) -> dict:
 
 
 async def analyze(
-    contract_text: str, rules: list[dict], risks: list[dict], history: list[str], client_name: str
+    contract_text: str, rules: list[dict], risks: list[dict], history: list[str],
+    client_name: str, all_rules: list[dict] | None = None,
 ) -> dict:
     if config.MOCK_MODE:
-        return mock_analyze(contract_text, rules, risks, history, client_name)
+        return mock_analyze(contract_text, rules, risks, history, client_name, all_rules)
     return await real_analyze(contract_text, rules, risks, history, client_name)
 
 
@@ -270,6 +362,32 @@ if __name__ == "__main__":
 
     # deterministic: same input, byte-identical output
     assert mock_analyze(awful, [], [], [], "Acme") == b
+
+    # ---- gaps: driven by recalled memory, not by the contract alone ----------
+    clean_but_silent = (
+        "1. FEE. Total fee USD 9,000 payable Net 30 from invoice date, 30% on signing.\n"
+        "2. IP. Copyright assigns to Client upon full payment of all sums due.\n"
+    )
+    portfolio_rule = [{"text": "Retain the right to show non-confidential work in a portfolio."}]
+
+    # No rule recalled -> no gap raised, even though the contract is silent.
+    assert find_gaps(clean_but_silent, []) == []
+    # Rule recalled and contract silent -> gap.
+    gaps = find_gaps(clean_but_silent, portfolio_rule)
+    assert [g["clause"] for g in gaps] == ["Missing: Portfolio rights"], gaps
+    assert gaps[0]["kind"] == "gap"
+    # Rule recalled and contract addresses it -> no gap.
+    assert find_gaps(clean_but_silent + "Contractor may display work in a portfolio.",
+                     portfolio_rule) == []
+
+    # ---- unfilled templates are not reviewable ------------------------------
+    assert find_placeholders("payable within [7/15/30] days") is None      # 1 hit, ignored
+    tpl = find_placeholders("[Date] fee [Amount] within [7/15/30] days by [Client Name]")
+    assert tpl and tpl["severity"] == 4 and "4 placeholders" in tpl["issue"], tpl
+
+    # A silent-but-clean contract now scores above zero when memory says it should.
+    c = mock_analyze(clean_but_silent, portfolio_rule, [], [], "Acme")
+    assert c["risk_score"] > 0 and len(c["findings"]) == 1, c
 
     print(f"ok — clean={a['risk_score']}/{a['recommendation']}  "
           f"awful={b['risk_score']}/{b['recommendation']} ({len(b['findings'])} findings)")

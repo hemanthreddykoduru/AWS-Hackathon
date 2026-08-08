@@ -29,6 +29,7 @@ class GuardianState(TypedDict, total=False):
     # filled by retrieve_memory
     retrieved_rules: list[dict]
     retrieved_risks: list[dict]
+    all_rules: list[dict]        # full rule set, for gap detection
     negotiation_history: list[str]
     # filled by analyze_contract
     final_decision: dict
@@ -75,6 +76,9 @@ def build_graph(engine, checkpointer):
         return {
             "retrieved_rules": await _search(memory.rules_store(engine), chunks),
             "retrieved_risks": await _search(memory.risks_store(engine), chunks),
+            # Similarity cannot surface a rule the contract never mentions, so gap
+            # detection gets the whole rule set rather than the recalled subset.
+            "all_rules": await memory.all_rules(engine),
             "negotiation_history": [f"{m.type}: {m.content}" for m in messages],
         }
 
@@ -84,6 +88,7 @@ def build_graph(engine, checkpointer):
             contract_text=state["contract_text"],
             rules=state.get("retrieved_rules", []),
             risks=state.get("retrieved_risks", []),
+            all_rules=state.get("all_rules", []),
             history=state.get("negotiation_history", []),
             client_name=state["client_name"],
         )

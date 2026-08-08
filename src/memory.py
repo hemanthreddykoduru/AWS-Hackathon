@@ -158,6 +158,23 @@ CREATE TABLE IF NOT EXISTS {config.AUDIT_TABLE} (
 """
 
 
+async def all_rules(engine: CockroachDBEngine) -> list[dict]:
+    """Every standing rule, not a similarity search.
+
+    Gap detection needs the full set: vector search returns rules that resemble the
+    contract's contents, but a missing protection is by definition absent from those
+    contents, so it can never be retrieved that way. The corpus is small enough
+    (tens of rows) that reading it whole is cheaper than being clever.
+    """
+    async with engine.engine.connect() as conn:
+        result = await conn.execute(
+            text(f"SELECT content, metadata FROM {config.VECTOR_TABLE} WHERE namespace = :ns"),
+            {"ns": config.NS_RULES},
+        )
+        return [{"text": r.content, "severity": (r.metadata or {}).get("severity")}
+                for r in result.all()]
+
+
 async def write_audit(
     engine: CockroachDBEngine,
     *,
