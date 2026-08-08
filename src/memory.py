@@ -60,9 +60,22 @@ class HashEmbeddings(Embeddings):
 
 
 def get_embeddings() -> Embeddings:
-    if config.MOCK_MODE:
+    provider = config.provider()
+    if provider == "mock":
         return HashEmbeddings(config.EMBED_DIM)
-    from langchain_openai import OpenAIEmbeddings  # optional dep, only for real mode
+
+    if provider == "gemini":
+        from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
+        # output_dimensionality truncates gemini-embedding-001 from its native 3072
+        # down to our column width, so switching providers needs no schema change.
+        return GoogleGenerativeAIEmbeddings(
+            model=config.GEMINI_EMBED_MODEL,
+            google_api_key=config.GEMINI_API_KEY,
+            output_dimensionality=config.EMBED_DIM,
+        )
+
+    from langchain_openai import OpenAIEmbeddings
 
     return OpenAIEmbeddings(
         model=config.OPENAI_EMBED_MODEL, api_key=config.OPENAI_API_KEY

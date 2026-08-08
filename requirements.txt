@@ -12,5 +12,8 @@ boto3>=1.34
 # Config
 python-dotenv>=1.0
 
-# OPTIONAL — only needed when MOCK_MODE=false. Uncomment to use real LLM/embeddings.
+# Real LLM path (MOCK_MODE=false). Gemini has a free tier that needs no card.
+langchain-google-genai>=4.3.2
+
+# OPTIONAL — only if you prefer OpenAI over Gemini.
 # langchain-openai>=0.2

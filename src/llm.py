@@ -173,14 +173,27 @@ def mock_analyze(
 # --------------------------------------------------------------------------- #
 # Real analyser
 # --------------------------------------------------------------------------- #
+def _chat_model():
+    """The configured chat model. temperature=0 because a contract review that changes
+    its mind between identical runs is not reviewable."""
+    if config.provider() == "gemini":
+        from langchain_google_genai import ChatGoogleGenerativeAI
+
+        return ChatGoogleGenerativeAI(
+            model=config.GEMINI_MODEL,
+            google_api_key=config.GEMINI_API_KEY,
+            temperature=0,
+        )
+
+    from langchain_openai import ChatOpenAI
+
+    return ChatOpenAI(model=config.OPENAI_MODEL, api_key=config.OPENAI_API_KEY, temperature=0)
+
+
 async def real_analyze(
     contract_text: str, rules: list[dict], risks: list[dict], history: list[str], client_name: str
 ) -> dict:
-    from langchain_openai import ChatOpenAI  # optional dep, real mode only
-
-    llm = ChatOpenAI(
-        model=config.OPENAI_MODEL, api_key=config.OPENAI_API_KEY, temperature=0
-    )
+    llm = _chat_model()
     reply = await llm.ainvoke(
         [
             ("system", prompts.SYSTEM),

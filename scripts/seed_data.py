@@ -37,7 +37,8 @@ def parse(path: Path) -> tuple[list[str], list[dict]]:
         if not severity.isdigit() or not 1 <= int(severity) <= 5:
             raise ValueError(f"{path.name}:{lineno}: severity must be 1-5, got {severity!r}")
         texts.append(body)
-        metas.append({"kind": kind.lower(), "severity": int(severity), "source": path.name})
+        metas.append({"kind": kind.lower(), "severity": int(severity),
+                      "source": path.name, "embedder": config.embedder_id()})
     if not texts:
         raise ValueError(f"{path.name}: no entries found")
     return texts, metas
@@ -53,7 +54,8 @@ async def count(engine, namespace: str) -> int:
 
 
 async def main(force: bool) -> None:
-    print(config.summary(), "\n")
+    print(config.summary())
+    print(f"embedder: {config.embedder_id()}\n")
     engine = memory.get_engine()
     try:
         for namespace, path in SOURCES:

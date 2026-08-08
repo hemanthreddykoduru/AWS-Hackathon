@@ -12,6 +12,12 @@ connections on the next warm start.
 from . import config, memory
 from sqlalchemy import text
 
+_MODE_LABEL = {
+    "mock": "deterministic engine · no API key",
+    "gemini": "Gemini",
+    "openai": "OpenAI",
+}
+
 
 async def memory_stats(backend: str = "in-process", auth: bool = False) -> dict:
     """Counts only — no contract text. Safe to serve before sign-in."""
@@ -32,7 +38,7 @@ async def memory_stats(backend: str = "in-process", auth: bool = False) -> dict:
         "reviews": reviews,
         "clients": clients,
         # "mock" was misleading: the analyser is a deterministic clause engine, not a stub.
-        "mode": "deterministic engine · no API key" if config.MOCK_MODE else "live LLM",
+        "mode": _MODE_LABEL[config.provider()],
         "backend": backend,
         "auth": auth,
     }
@@ -94,7 +100,8 @@ async def add_item(namespace: str, severity: int, body: str) -> dict:
     try:
         kind = "rule" if namespace == config.NS_RULES else "risk"
         await memory.vector_store(engine, namespace).aadd_texts(
-            [body], metadatas=[{"kind": kind, "severity": severity, "source": "ui"}]
+            [body], metadatas=[{"kind": kind, "severity": severity, "source": "ui",
+                        "embedder": config.embedder_id()}]
         )
     finally:
         await engine.aclose()

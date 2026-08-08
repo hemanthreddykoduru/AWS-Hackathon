@@ -40,9 +40,48 @@ NS_RULES = "rules"  # what I believe (my standing terms)
 NS_RISKS = "risks"  # what has burned me before (clause patterns)
 
 # --- LLM ---------------------------------------------------------------------
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+# gemini-embedding-001 defaults to 3072 dimensions but supports Matryoshka truncation,
+# so it can emit 1536 and reuse the existing table. (text-embedding-004 was shut down
+# in January 2026.)
+GEMINI_EMBED_MODEL = os.getenv("GEMINI_EMBED_MODEL", "models/gemini-embedding-001")
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 OPENAI_EMBED_MODEL = os.getenv("OPENAI_EMBED_MODEL", "text-embedding-3-small")
+
+
+def provider() -> str:
+    """Which brain is answering: 'mock', 'gemini' or 'openai'.
+
+    MOCK_MODE wins outright, so a stray key in the environment can never turn a
+    reproducible demo into a billed API call by accident.
+    """
+    if MOCK_MODE:
+        return "mock"
+    if GEMINI_API_KEY:
+        return "gemini"
+    if OPENAI_API_KEY:
+        return "openai"
+    raise RuntimeError(
+        "MOCK_MODE=false but no API key is set. Add GEMINI_API_KEY (free tier) or "
+        "OPENAI_API_KEY to .env, or set MOCK_MODE=true to use the deterministic engine."
+    )
+
+
+def embedder_id() -> str:
+    """Identifies which embedder produced a stored vector.
+
+    Vectors from different embedders are not comparable — mixing them silently
+    returns nonsense from similarity search rather than failing. Recorded on every
+    row so a mismatch is visible instead of mysterious.
+    """
+    return {
+        "mock": f"hash-{EMBED_DIM}",
+        "gemini": f"{GEMINI_EMBED_MODEL}-{EMBED_DIM}",
+        "openai": f"{OPENAI_EMBED_MODEL}-{EMBED_DIM}",
+    }[provider()]
 
 # --- AWS ---------------------------------------------------------------------
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
@@ -80,7 +119,7 @@ def summary() -> str:
     if "@" in url:
         url = url.split("://", 1)[0] + "://***:***@" + url.split("@", 1)[1]
     return (
-        f"MOCK_MODE={MOCK_MODE}  EMBED_DIM={EMBED_DIM}\n"
+        f"provider={provider()}  EMBED_DIM={EMBED_DIM}\n"
         f"db={url}\n"
         f"tables: {VECTOR_TABLE} / {CHAT_TABLE} / {AUDIT_TABLE} / {'+'.join(CHECKPOINT_TABLES)}"
     )
