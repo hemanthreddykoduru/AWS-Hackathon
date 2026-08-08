@@ -1,0 +1,15 @@
+# Risky clause patterns learned from past contracts. Seeded into semantic memory (namespace=risks).
+# Format: RISK | severity(1-5) | text
+
+RISK | 5 | Unlimited revisions until the client is satisfied in their sole discretion. Cost me 40 unpaid hours on the Northwind rebrand; "satisfaction" was never defined so it never ended.
+RISK | 5 | Payment on Net 60 or later, or conditioned on the client's written acceptance. Acceptance was withheld for four months on the Cortex project; the clause gave me no way to invoice.
+RISK | 5 | IP and copyright assign to the client on creation rather than on payment. When Halcyon Media went insolvent they owned the work and I owned an unsecured claim.
+RISK | 4 | Uncapped indemnity or liability without limitation as to amount. A $3,000 job carried unlimited downside; my insurer would not cover it.
+RISK | 4 | Non-compete longer than 12 months, or covering markets the client "may in future operate" in. Effectively bars me from my entire sector.
+RISK | 4 | Termination for convenience with no notice and no payment for work already performed. Two weeks of delivered work written off on the Vector engagement.
+RISK | 3 | Scope containing "and such other duties as the client may reasonably require". Every open-ended scope clause has expanded past the fee.
+RISK | 3 | No deposit or advance payment before work begins. Every non-payment I have suffered started with a zero deposit.
+RISK | 3 | Portfolio and case-study rights denied entirely, including non-confidential work. Six months of work I cannot show anyone.
+RISK | 2 | Client's own jurisdiction and exclusive courts for a small-value contract. Enforcing $6,000 across state lines costs more than the fee.
+RISK | 2 | No interest or pause right on late payment. Removes every lever I have to get paid on time.
+RISK | 2 | Waiver of moral rights bundled into the IP clause without separate consideration.

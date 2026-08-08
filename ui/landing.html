@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Freelance Guardian — an AI negotiation agent with permanent memory</title>
+<meta name="description" content="Freelancers sign bad contracts because they have no memory. Freelance Guardian reads a contract against your standing rules and every clause that ever burned you, then drafts the counter-offer. Its memory lives in CockroachDB.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon.ico">
+<script>(() => { const t = localStorage.getItem('fg-theme');
+  if (t) document.documentElement.dataset.theme = t; })();</script>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  html{scroll-behavior:smooth;scroll-padding-top:76px}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 28px}
+  h2{font-size:32px;max-width:660px}
+  section{padding:80px 0;border-bottom:1px solid var(--line)}
+
+  /* hero */
+  .hero{padding:80px 0 68px;border-bottom:1px solid var(--line)}
+  .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+  h1{font-size:50px}
+  h1 em{font-style:normal;color:var(--accent)}
+  .lede{color:var(--muted);font-size:16.5px;margin:20px 0 28px;max-width:470px}
+  .lede b{color:var(--ink);font-weight:600}
+  .cta-row{display:flex;gap:12px;flex-wrap:wrap}
+  .note{margin-top:24px;font-family:var(--ui);font-size:11.5px;color:var(--muted)}
+  .note span{margin-right:16px}.note b{color:var(--ink);font-weight:500}
+
+  /* the redline specimen — the hero image is the product's actual output */
+  .specimen{border:1px solid var(--line);border-radius:6px;background:var(--paper);overflow:hidden;
+    box-shadow:0 1px 2px rgba(23,20,18,.05),0 24px 48px -24px rgba(23,20,18,.18)}
+  .specimen-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;
+    padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--ui);
+    font-size:11px;color:var(--muted)}
+  .verdict-chip{font-family:var(--ui);font-size:11px;color:var(--no);letter-spacing:.1em}
+  .specimen-body{padding:18px 20px;font-size:13.5px;line-height:1.75}
+  .specimen-body p{margin-bottom:11px}
+  .specimen-body .cl{font-family:var(--ui);font-size:10px;letter-spacing:.1em;
+    color:var(--muted);display:block;margin-bottom:2px}
+  mark.rl{background:var(--no-soft);color:inherit;text-decoration:line-through;
+    text-decoration-color:var(--no);text-decoration-thickness:1.5px;
+    box-shadow:inset 2px 0 0 var(--no);padding:1px 3px}
+  .specimen-foot{border-top:1px solid var(--line);background:var(--accent-soft);
+    padding:12px 16px;font-size:12.5px}
+  .specimen-foot em{font-family:var(--ui);font-size:10px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--accent-deep);font-style:normal;margin-right:8px}
+
+  /* live stats */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--ink)}
+  .stat{padding:18px 18px 6px 0}
+  .stat+.stat{padding-left:18px;border-left:1px solid var(--line)}
+  .stat b{display:block;font-family:var(--tight);font-size:30px;font-weight:700;letter-spacing:-.02em}
+  .stat span{font-family:var(--ui);font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted)}
+
+  /* memory table */
+  .mem{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);margin-top:36px}
+  .mem>div{background:var(--paper);padding:22px 20px}
+  .mem h3{font-size:15.5px;margin-bottom:4px}
+  .mem .kind{font-family:var(--ui);font-size:10px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--accent-deep);margin-bottom:10px}
+  .mem p{font-size:13px;color:var(--muted);margin-bottom:12px}
+  .mem code{font-family:var(--ui);font-size:11px;color:var(--muted);
+    display:block;padding-top:10px;border-top:1px solid var(--line)}
+
+  /* flow */
+  .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);margin-top:36px}
+  .flow>div{background:var(--paper);padding:18px 18px 20px}
+  .flow .n{font-family:var(--ui);font-size:11px;color:var(--accent);margin-bottom:9px}
+  .flow h4{font-family:var(--ui);font-size:12.5px;margin-bottom:6px;font-weight:500}
+  .flow p{font-size:12.5px;color:var(--muted)}
+
+  /* audit payoff */
+  .payoff{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;margin-top:36px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{font-family:var(--ui);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);text-align:left;font-weight:500;padding:0 12px 10px 0;
+    border-bottom:1px solid var(--ink)}
+  td{padding:11px 12px 11px 0;border-bottom:1px solid var(--line)}
+  td.n{font-family:var(--ui);color:var(--accent-deep)}
+  pre{font-family:var(--ui);font-size:11.5px;line-height:1.7;background:var(--accent-soft);
+    border:1px solid var(--line);border-left:2px solid var(--accent);border-radius:var(--r);
+    padding:16px;overflow-x:auto}
+
+  footer{padding:44px 0;font-family:var(--ui);font-size:11.5px;color:var(--muted);
+    display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  footer a{color:var(--accent-deep)}
+
+  @media (max-width:900px){
+    h1{font-size:36px} h2{font-size:26px}
+    .hero-grid,.payoff{grid-template-columns:1fr;gap:40px}
+    .mem,.flow{grid-template-columns:1fr}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .stat+.stat{border-left:none;padding-left:0}
+  }
+</style>
+</head>
+<body>
+
+<nav><div class="nav-in">
+  <a class="wordmark" href="/"><i></i>Freelance Guardian</a>
+  <div class="nav-right">
+    <button id="theme" type="button">Dark</button>
+    <a href="/app" class="btn btn-p btn-sm">Open the agent</a>
+  </div>
+</div></nav>
+
+<header class="hero"><div class="wrap hero-grid">
+  <div>
+    <div class="eyebrow">Agentic memory for contract negotiation</div>
+    <h1>Your last bad contract<br>should be your <em>last.</em></h1>
+    <p class="lede">Freelancers sign bad contracts because they have no memory. The
+      unlimited-revisions clause that cost you forty unpaid hours in March is invisible in
+      June. Freelance Guardian reads every contract against <b>your standing rules</b> and
+      <b>every clause that has ever burned you</b> — then drafts the counter-offer.</p>
+    <div class="cta-row">
+      <a href="/app" class="btn btn-p">Review a contract</a>
+      <a href="#memory" class="btn btn-g">How the memory works</a>
+    </div>
+    <div class="note">
+      <span><b>No</b> API key needed</span><span><b>Free</b> tier throughout</span><span>Memory in <b>CockroachDB</b></span>
+    </div>
+  </div>
+
+  <div class="specimen">
+    <div class="specimen-bar">
+      <span>apex-dynamics-llc · reviewed</span>
+      <span class="verdict-chip">93 · REJECT</span>
+    </div>
+    <div class="specimen-body">
+      <p><span class="cl">2. REVISIONS</span>Client is entitled to
+        <mark class="rl">unlimited revisions</mark> until Client is fully satisfied in
+        Client's <mark class="rl">sole discretion</mark>.</p>
+      <p><span class="cl">3. COMPENSATION</span>Total fee USD 6,000, payable
+        <mark class="rl">Net 60</mark> following Client's written acceptance.
+        <mark class="rl">No deposit</mark> shall be made.</p>
+      <p><span class="cl">4. INTELLECTUAL PROPERTY</span>All work product shall be the
+        property of Client <mark class="rl">immediately upon creation, whether or not
+        payment has been made</mark>.</p>
+    </div>
+    <div class="specimen-foot"><em>Recalled</em>“Never transfer copyright before final
+      payment clears” — your rule, and the reason Halcyon Media never paid.</div>
+  </div>
+</div></header>
+
+<section><div class="wrap">
+  <div class="eyebrow">Live from the database</div>
+  <h2>This is not a mockup. These numbers come from the running agent.</h2>
+  <div class="stats" id="stats" style="margin-top:34px">
+    <div class="stat"><b data-k="rules">–</b><span>rules remembered</span></div>
+    <div class="stat"><b data-k="risks">–</b><span>past risks recorded</span></div>
+    <div class="stat"><b data-k="reviews">–</b><span>contracts reviewed</span></div>
+    <div class="stat"><b data-k="clients">–</b><span>clients tracked</span></div>
+  </div>
+</div></section>
+
+<section id="memory"><div class="wrap">
+  <div class="eyebrow">Architecture</div>
+  <h2>Agentic memory is not one thing. We store it as three.</h2>
+  <p class="muted" style="margin-top:14px;max-width:640px">Each is read at a different
+    moment, written by different code, and lives for a different length of time. Collapsing
+    them into one vector store is what makes agents feel amnesiac despite “having RAG”.</p>
+
+  <div class="mem">
+    <div>
+      <div class="kind">Semantic</div>
+      <h3>What I believe</h3>
+      <p>Your standing terms and the clause patterns that have harmed you. Vector-searched
+        per clause, so a contract about non-competes recalls different rules than one about
+        payment.</p>
+      <code>AsyncCockroachDBVectorStore → guardian_memory</code>
+    </div>
+    <div>
+      <div class="kind">Episodic</div>
+      <h3>What happened with this client</h3>
+      <p>One durable thread per client. Reopening it months later replays the whole
+        negotiation, so the agent never re-demands something you already conceded.</p>
+      <code>CockroachDBChatMessageHistory → guardian_chat_history</code>
+    </div>
+    <div>
+      <div class="kind">Procedural</div>
+      <h3>Where the work got to</h3>
+      <p>Workflow state checkpointed after every step. Kill the process mid-review and the
+        next run resumes from the last completed node instead of starting over.</p>
+      <code>AsyncCockroachDBSaver → checkpoints</code>
+    </div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="eyebrow">The workflow</div>
+  <h2>Four steps, every one of them written down.</h2>
+  <div class="flow">
+    <div><div class="n">01</div><h4>ingest_contract</h4>
+      <p>Archives the original to S3, then splits it into clauses.</p></div>
+    <div><div class="n">02</div><h4>retrieve_memory</h4>
+      <p>One vector query per clause across both namespaces, plus this client's thread.</p></div>
+    <div><div class="n">03</div><h4>analyze_contract</h4>
+      <p>Scores commercial risk 0–100 and drafts a send-ready counter-offer.</p></div>
+    <div><div class="n">04</div><h4>save_state</h4>
+      <p>Writes the decision to an append-only audit log and the client's thread.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="eyebrow">The payoff</div>
+  <h2>A clause flagged across many clients isn't a client problem.</h2>
+  <p class="muted" style="margin-top:14px;max-width:620px">It's a missing term in
+    <em>your</em> contract. No single review can reach that conclusion — it only exists
+    because every decision was written somewhere queryable.</p>
+  <div class="payoff">
+    <table>
+      <thead><tr><th>Clause</th><th>Severity</th><th>Times flagged</th></tr></thead>
+      <tbody id="clauses"><tr><td class="muted" colspan="3">loading…</td></tr></tbody>
+    </table>
+    <pre>SELECT f-&gt;&gt;'clause'      AS clause,
+       count(*)            AS times_flagged,
+       count(DISTINCT client_name) AS clients
+FROM   agent_audit_log,
+       jsonb_array_elements(decision-&gt;'findings') AS f
+GROUP  BY 1
+ORDER  BY times_flagged DESC;</pre>
+  </div>
+</div></section>
+
+<div class="wrap"><footer>
+  <span>Freelance Guardian · CockroachDB × AWS Hackathon</span>
+  <span><a href="/app">Open the agent</a> · <a href="/app#/dashboard">Dashboard</a></span>
+</footer></div>
+
+<script src="/theme.js"></script>
+<script>
+const esc = s => String(s ?? '').replace(/[&<>"']/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// The stats and the clause table are the page's central claim — that this is live.
+// If the agent is not running, say so plainly rather than showing invented numbers.
+(async () => {
+  try {
+    const m = await (await fetch('/api/memory')).json();
+    if (m.error) throw new Error(m.error);
+    for (const [k, v] of Object.entries(m))
+      document.querySelectorAll(`[data-k="${k}"]`).forEach(el => el.textContent = v);
+  } catch {
+    document.querySelectorAll('[data-k]').forEach(el => el.textContent = '—');
+    document.getElementById('stats').insertAdjacentHTML('afterend',
+      '<p class="muted mono" style="margin-top:14px;font-size:11.5px">' +
+      'The agent is not running, so these are blank rather than made up. Start it with <b>make ui-aws</b>.</p>');
+  }
+
+  const tbody = document.getElementById('clauses');
+  try {
+    const d = await (await fetch('/api/dashboard')).json();
+    const rows = (d.top_clauses || []).slice(0, 6);
+    tbody.innerHTML = rows.length
+      ? rows.map(c => `<tr><td>${esc(c.clause)}</td><td class="n">SEV ${c.severity}</td>` +
+          `<td class="n">${c.times_flagged} · ${c.clients} client${c.clients === 1 ? '' : 's'}</td></tr>`).join('')
+      : '<tr><td class="muted" colspan="3">No reviews yet. The table fills as contracts are reviewed.</td></tr>';
+  } catch {
+    tbody.innerHTML = '<tr><td class="muted" colspan="3">Sign in to see your audit data.</td></tr>';
+  }
+})();
+</script>
+</body>
+</html>

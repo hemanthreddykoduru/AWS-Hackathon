@@ -1,0 +1,17 @@
+# Freelancer rules — one rule per line. Seeded into semantic memory (guardian_memory).
+# Format: RULE | severity(1-5) | text
+
+RULE | 5 | Never accept unlimited revisions. Cap revision rounds at two; additional rounds bill at the hourly rate.
+RULE | 5 | Never accept payment terms longer than Net 30. Net 45, Net 60 and "on client approval" are rejected.
+RULE | 5 | Never transfer copyright before final payment clears. IP assigns on payment, not on delivery.
+RULE | 4 | Always require a deposit of at least 30% before work begins.
+RULE | 4 | Never accept unlimited or uncapped liability. Liability caps at total fees paid under the contract.
+RULE | 4 | Reject non-compete clauses broader than the client's direct competitors, or longer than 6 months.
+RULE | 3 | Scope must be written and itemised. "And other duties as required" is not a scope.
+RULE | 3 | Late payment accrues 2% interest per month; work pauses after 14 days overdue.
+RULE | 3 | Kill fee of 50% of remaining contract value if the client cancels mid-project.
+RULE | 3 | Retain the right to show non-confidential work in a portfolio.
+RULE | 2 | Client-supplied assets and approvals are the client's responsibility; delays extend the timeline.
+RULE | 2 | Rush work outside agreed hours bills at 1.5x.
+RULE | 2 | Contract is governed by my jurisdiction, not the client's, unless fees exceed $25,000.
+RULE | 1 | Prefer milestone billing over a single lump sum on completion.

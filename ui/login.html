@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in — Freelance Guardian</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon.ico">
+<script>(() => { const t = localStorage.getItem('fg-theme');
+  if (t) document.documentElement.dataset.theme = t; })();</script>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  body{display:grid;place-items:center;min-height:100vh;padding:28px}
+  .card{width:100%;max-width:380px}
+  .card .wordmark{margin-bottom:30px;font-size:18px}
+  h1{font-size:26px;margin-bottom:8px}
+  .card p.sub{color:var(--muted);font-size:13.5px;margin-bottom:26px}
+  form{display:grid;gap:14px}
+  .foot{margin-top:26px;padding-top:18px;border-top:1px solid var(--line);
+    font-family:var(--ui);font-size:11px;color:var(--muted);
+    display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .foot a{color:var(--accent-deep)}
+  #msg{display:none;margin-bottom:18px;font-size:13px}
+  #msg.show{display:block}
+</style>
+</head>
+<body>
+
+<main class="card">
+  <span class="wordmark"><i></i>Freelance Guardian</span>
+
+  <h1>Sign in</h1>
+  <p class="sub">This workspace holds your contracts and negotiation history. Enter the
+    passcode set on the server.</p>
+
+  <div id="msg" class="err"></div>
+
+  <form id="f" autocomplete="on">
+    <div>
+      <label for="passcode">Passcode</label>
+      <!-- type=password so it is not shouldered or logged by autofill as plain text -->
+      <input id="passcode" name="password" type="password" required autofocus
+             autocomplete="current-password">
+    </div>
+    <button class="btn btn-p" type="submit" id="go">Sign in</button>
+  </form>
+
+  <div class="foot">
+    <a href="/">Back to the site</a>
+    <button id="theme" type="button">Dark</button>
+  </div>
+</main>
+
+<script src="/theme.js"></script>
+<script>
+const msg = document.getElementById('msg');
+const show = text => { msg.innerHTML = '<b>Cannot sign in.</b> '; msg.append(text);
+                       msg.classList.add('show'); };
+
+// Send people back where they were headed, but only to a same-site path — an
+// attacker-supplied absolute URL here would be an open redirect.
+const raw = new URLSearchParams(location.search).get('next') || '/app';
+const next = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/app';
+
+document.getElementById('f').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('go');
+  btn.disabled = true; btn.textContent = 'Checking…';
+  msg.classList.remove('show');
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({passcode: document.getElementById('passcode').value})
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    location.href = next;
+  } catch (err) {
+    show(err.message);
+    document.getElementById('passcode').select();
+  } finally { btn.disabled = false; btn.textContent = 'Sign in'; }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Freelance Guardian</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon.ico">
+<script>(() => { const t = localStorage.getItem('fg-theme');
+  if (t) document.documentElement.dataset.theme = t; })();</script>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  #stats{display:flex;gap:16px;font-family:var(--ui);font-size:11px;color:var(--muted);flex-wrap:wrap}
+  #stats b{color:var(--ink);font-weight:500}
+  .dot{display:inline-block;width:7px;height:7px;background:var(--ok);margin-right:7px;vertical-align:1px}
+  .dot.off{background:var(--muted)}
+
+  main{max-width:1240px;margin:0 auto;padding:0 28px}
+  .page{display:none}.page.on{display:block}
+
+  /* ---- review ---- */
+  .split{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(360px,.9fr);
+    gap:0;min-height:calc(100vh - 63px);margin:0 -28px}
+  .split>section{padding:30px 28px;min-width:0}
+  .split>section+section{border-left:1px solid var(--line)}
+  @media (max-width:980px){
+    .split{grid-template-columns:1fr}
+    .split>section+section{border-left:none;border-top:1px solid var(--line)}
+  }
+  textarea{line-height:1.7;min-height:360px;resize:vertical}
+  .row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+
+  #doc{font-size:14px;line-height:1.78;white-space:pre-wrap;word-wrap:break-word;
+    background:var(--paper);border:1px solid var(--line);border-radius:var(--r);
+    padding:22px 24px;max-height:74vh;overflow:auto}
+  mark.rl{background:var(--no-soft);color:inherit;text-decoration:line-through;
+    text-decoration-color:var(--no);text-decoration-thickness:1.5px;
+    box-shadow:inset 2px 0 0 var(--no);padding:1px 3px;cursor:pointer;scroll-margin:100px;
+    transition:background .15s,color .15s}
+  mark.rl:hover,mark.rl.lit{background:var(--no);color:#fff;text-decoration-color:#fff}
+
+  .verdict{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
+  .score{font-family:var(--tight);font-size:64px;font-weight:700;letter-spacing:-.04em;line-height:.9}
+  .call{font-family:var(--ui);font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+  .reject .score,.reject .call{color:var(--no)}
+  .accept .score,.accept .call{color:var(--ok)}
+  .negotiate .score,.negotiate .call{color:var(--accent-deep)}
+  .sub-line{color:var(--muted);font-size:13.5px;margin-top:14px;max-width:52ch}
+
+  .finding{border-top:1px solid var(--line);padding:13px 0 13px 15px;position:relative;cursor:pointer}
+  .finding::before{content:"";position:absolute;left:0;top:15px;bottom:15px;width:3px;background:var(--no)}
+  .finding[data-sev="4"]::before{opacity:.75}
+  .finding[data-sev="3"]::before{width:2px;opacity:.55}
+  .finding[data-sev="2"]::before{width:2px;opacity:.38}
+  .finding[data-sev="1"]::before{width:1px;opacity:.25}
+  .finding:hover,.finding.lit{background:var(--accent-soft)}
+  .fhead{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+  .fname{font-weight:600;font-size:14px}
+  .fsev{font-family:var(--ui);font-size:10px;color:var(--muted);letter-spacing:.1em;white-space:nowrap}
+  .fissue{color:var(--muted);font-size:13px;margin-top:4px}
+  .fask{margin-top:7px;font-size:13px;padding-left:12px;border-left:1px solid var(--line)}
+  .fask em{font-family:var(--ui);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent-deep);font-style:normal;margin-right:7px}
+
+  details{border-top:1px solid var(--line)}
+  details summary{cursor:pointer;font-family:var(--ui);font-size:11.5px;padding:12px 0;
+    color:var(--muted);list-style:none;display:flex;gap:9px;align-items:baseline}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"+";color:var(--accent);width:10px;flex-shrink:0}
+  details[open] summary::before{content:"–"}
+  details summary:hover{color:var(--ink)}
+  details b{color:var(--ink);font-weight:500}
+  details ul{list-style:none;padding:0 0 14px 19px}
+  details li{font-size:13px;padding:7px 0;border-top:1px solid var(--line);color:var(--muted)}
+  details li:first-child{border-top:none}
+  .sev-pill{font-family:var(--ui);font-size:9.5px;letter-spacing:.09em;color:var(--accent-deep)}
+
+  pre#email{font-family:var(--sans);font-size:13.5px;line-height:1.72;white-space:pre-wrap;
+    background:var(--accent-soft);border:1px solid var(--line);border-left:2px solid var(--accent);
+    border-radius:var(--r);padding:18px 20px;margin-top:14px;max-height:320px;overflow:auto}
+  .empty{color:var(--muted);font-size:15px;line-height:1.7;max-width:38ch;margin-top:30px}
+  .empty b{color:var(--ink);font-weight:600}
+  .uri{font-family:var(--ui);font-size:10px;color:var(--muted);word-break:break-all;
+    margin-top:24px;padding-top:14px;border-top:1px dashed var(--line)}
+
+  /* ---- dashboard / settings shared ---- */
+  .pad{padding:34px 0 64px}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);margin-bottom:34px}
+  .cards>div{background:var(--paper);padding:18px 18px 14px}
+  .cards b{display:block;font-family:var(--tight);font-size:30px;font-weight:700;letter-spacing:-.02em}
+  .cards span{font-family:var(--ui);font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{font-family:var(--ui);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);text-align:left;font-weight:500;padding:0 12px 10px 0;
+    border-bottom:1px solid var(--ink)}
+  td{padding:11px 12px 11px 0;border-bottom:1px solid var(--line);vertical-align:top}
+  td.n{font-family:var(--ui);color:var(--muted);white-space:nowrap}
+  td.hot{color:var(--no)}
+  .bar{display:inline-block;height:8px;background:var(--accent);vertical-align:1px;margin-right:8px;min-width:2px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:48px}
+  @media (max-width:900px){.two{grid-template-columns:1fr;gap:36px}.cards{grid-template-columns:repeat(2,1fr)}}
+
+  .mem-item{display:flex;gap:14px;align-items:flex-start;padding:12px 0;
+    border-top:1px solid var(--line);font-size:13.5px}
+  .mem-item .sev{font-family:var(--ui);font-size:10px;letter-spacing:.08em;color:var(--accent-deep);
+    white-space:nowrap;padding-top:2px}
+  .mem-item .txt{flex:1;min-width:0}
+  .mem-item button{background:none;border:none;color:var(--muted);font-family:var(--ui);
+    font-size:11px;padding:2px 6px}
+  .mem-item button:hover{color:var(--no)}
+  form.add{display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:end;
+    margin:18px 0 8px}
+  @media (max-width:700px){form.add{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav><div class="nav-in">
+  <a class="wordmark" href="/"><i></i>Freelance Guardian</a>
+  <div class="tabs">
+    <a href="#/review" data-tab="review">Review</a>
+    <a href="#/dashboard" data-tab="dashboard">Dashboard</a>
+    <a href="#/settings" data-tab="settings">Settings</a>
+  </div>
+  <div class="nav-right">
+    <div id="stats"><span class="dot off"></span>connecting…</div>
+    <button id="theme" type="button">Dark</button>
+    <button id="logout" class="btn btn-g btn-sm" type="button" hidden>Sign out</button>
+  </div>
+</div></nav>
+
+<main>
+
+<!-- ═══════════ REVIEW ═══════════ -->
+<div class="page" id="p-review">
+  <div class="split">
+    <section>
+      <div class="eyebrow">The contract</div>
+      <div id="pane">
+        <label for="client">Client</label>
+        <input id="client" value="Apex Dynamics LLC" autocomplete="off">
+        <div style="height:14px"></div>
+        <label for="contract">Contract text</label>
+        <textarea id="contract" placeholder="Paste the agreement here."></textarea>
+      </div>
+      <div class="row">
+        <button class="btn btn-p" id="go">Review contract</button>
+        <button class="btn btn-g" id="sample">Load sample</button>
+        <button class="btn btn-g" id="edit" hidden>Edit contract</button>
+      </div>
+    </section>
+    <section id="out">
+      <div class="eyebrow">Verdict</div>
+      <p class="empty">Paste a contract. It gets checked against <b>your standing rules</b>
+        and <b>every clause that has burned you before</b> — then marked up, clause by clause.</p>
+    </section>
+  </div>
+</div>
+
+<!-- ═══════════ DASHBOARD ═══════════ -->
+<div class="page pad" id="p-dashboard">
+  <div class="eyebrow">Dashboard</div>
+  <div class="cards" id="d-cards"></div>
+  <div class="two">
+    <div>
+      <div class="eyebrow sub" style="margin-top:0">Most-flagged clauses</div>
+      <p class="muted" style="font-size:13px;margin-bottom:16px">Flagged across many
+        clients means a missing term in your own contract, not a bad client.</p>
+      <table><thead><tr><th>Clause</th><th>Sev</th><th>Flagged</th></tr></thead>
+        <tbody id="d-clauses"></tbody></table>
+    </div>
+    <div>
+      <div class="eyebrow sub" style="margin-top:0">Clients</div>
+      <p class="muted" style="font-size:13px;margin-bottom:16px">Worst score seen, and how
+        much history the agent carries for each.</p>
+      <table><thead><tr><th>Client</th><th>Reviews</th><th>Worst</th></tr></thead>
+        <tbody id="d-clients"></tbody></table>
+    </div>
+  </div>
+  <div class="eyebrow sub">Recent decisions</div>
+  <table><thead><tr><th>When</th><th>Client</th><th>Score</th><th>Call</th><th>Findings</th></tr></thead>
+    <tbody id="d-recent"></tbody></table>
+</div>
+
+<!-- ═══════════ SETTINGS ═══════════ -->
+<div class="page pad" id="p-settings">
+  <div class="eyebrow">Settings</div>
+  <div class="two">
+    <div>
+      <h3 style="font-size:17px;margin-bottom:6px">Your standing rules</h3>
+      <p class="muted" style="font-size:13px">Non-negotiable positions. The agent will never
+        contradict one. These apply to every client.</p>
+      <form class="add" data-ns="rules">
+        <div><label for="r-sev">Severity</label>
+          <select id="r-sev" name="severity">
+            <option>5</option><option>4</option><option selected>3</option>
+            <option>2</option><option>1</option></select></div>
+        <div><label for="r-txt">Rule</label>
+          <input id="r-txt" name="text" placeholder="Never accept payment terms longer than Net 30." required></div>
+        <button class="btn btn-p" type="submit">Add</button>
+      </form>
+      <div id="list-rules"></div>
+    </div>
+    <div>
+      <h3 style="font-size:17px;margin-bottom:6px">Clauses that burned you</h3>
+      <p class="muted" style="font-size:13px">What actually went wrong, in your own words.
+        Specific beats abstract — the agent matches on your language.</p>
+      <form class="add" data-ns="risks">
+        <div><label for="k-sev">Severity</label>
+          <select id="k-sev" name="severity">
+            <option>5</option><option>4</option><option selected>3</option>
+            <option>2</option><option>1</option></select></div>
+        <div><label for="k-txt">What happened</label>
+          <input id="k-txt" name="text" placeholder="Net 60 payment was withheld for four months on the Cortex project." required></div>
+        <button class="btn btn-p" type="submit">Add</button>
+      </form>
+      <div id="list-risks"></div>
+    </div>
+  </div>
+  <div class="eyebrow sub">Runtime</div>
+  <table><tbody id="s-runtime"></tbody></table>
+</div>
+
+</main>
+
+<script src="/theme.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  if (res.status === 401) { location.href = '/login?next=' + encodeURIComponent(location.pathname + location.hash); return null; }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+/* ───────── routing ───────── */
+const TABS = ['review', 'dashboard', 'settings'];
+function route() {
+  const tab = TABS.includes(location.hash.slice(2)) ? location.hash.slice(2) : 'review';
+  TABS.forEach(t => {
+    $(`#p-${t}`).classList.toggle('on', t === tab);
+    const link = document.querySelector(`[data-tab="${t}"]`);
+    t === tab ? link.setAttribute('aria-current', 'page') : link.removeAttribute('aria-current');
+  });
+  if (tab === 'dashboard') loadDashboard();
+  if (tab === 'settings') loadSettings();
+}
+addEventListener('hashchange', route);
+
+/* ───────── masthead stats ───────── */
+async function loadStats() {
+  try {
+    const m = await api('/api/memory'); if (!m) return;
+    $('#stats').innerHTML =
+      `<span><span class="dot"></span>CockroachDB</span>` +
+      `<span><b>${m.rules}</b> rules</span><span><b>${m.risks}</b> risks</span>` +
+      `<span><b>${m.reviews}</b> reviews · <b>${m.clients}</b> clients</span>` +
+      `<span>${esc(m.mode)}</span>`;
+    $('#logout').hidden = !m.auth;
+  } catch (e) {
+    $('#stats').innerHTML = `<span><span class="dot off"></span>memory unreachable — ${esc(e.message)}</span>`;
+  }
+}
+
+/* ───────── review ───────── */
+function redline(text, findings) {
+  const spans = findings.map((f, i) => ({...f, i}))
+    .filter(f => Array.isArray(f.span)).sort((a, b) => a.span[0] - b.span[0]);
+  let html = '', at = 0;
+  for (const f of spans) {
+    const [s, e] = f.span;
+    if (s < at) continue;                      // overlapping matches: keep the first
+    html += esc(text.slice(at, s));
+    html += `<mark class="rl" data-i="${f.i}" data-sev="${f.severity}" `
+         +  `title="${esc(f.clause)} — severity ${f.severity}">${esc(text.slice(s, e))}</mark>`;
+    at = e;
+  }
+  return html + esc(text.slice(at));
+}
+
+function link() {                               // hovering either side lights the other
+  const pair = (sel, get) => document.querySelectorAll(sel).forEach(el => {
+    el.addEventListener('mouseenter', () => { const t = get(el); if (t) t.classList.add('lit'); });
+    el.addEventListener('mouseleave', () => document.querySelectorAll('.lit')
+      .forEach(x => x.classList.remove('lit')));
+    el.addEventListener('click', () => { const t = get(el);
+      if (t) t.scrollIntoView({behavior: 'smooth', block: 'center'}); });
+  });
+  pair('.finding', el => $(`mark.rl[data-i="${el.dataset.i}"]`));
+  pair('mark.rl',  el => $(`.finding[data-i="${el.dataset.i}"]`));
+}
+
+const memoryList = (title, items) => !items?.length ? '' :
+  `<details><summary><b>${title}</b> · ${items.length} recalled</summary><ul>` +
+  items.map(i => `<li>${esc(i.text)} <span class="sev-pill">SEV ${i.severity ?? '?'}</span></li>`).join('') +
+  `</ul></details>`;
+
+function render(d, contract) {
+  const mem = d.memory_used || {};
+  $('#out').innerHTML = `
+    <div class="eyebrow">Verdict</div>
+    <div class="verdict ${d.recommendation}">
+      <span class="score">${d.risk_score}</span>
+      <span class="call">${esc(d.recommendation)} as written</span>
+    </div>
+    <p class="sub-line">${esc(d.reasoning || '')}</p>
+    <div class="eyebrow sub">Memory consulted</div>
+    ${memoryList('Your standing rules', mem.rules)}
+    ${memoryList('Clauses that burned you before', mem.risks)}
+    <details><summary><b>This client's history</b> · ${mem.prior_messages ?? 0} prior messages</summary>
+      <ul><li>${mem.prior_messages
+        ? 'Loaded from guardian_chat_history — the agent has negotiated with this client before.'
+        : 'First contact. Nothing on file for this client yet.'}</li></ul></details>
+    <div class="eyebrow sub">Findings · ${d.findings.length}</div>
+    ${d.findings.map((f, i) => `
+      <div class="finding" data-i="${i}" data-sev="${f.severity}">
+        <div class="fhead"><span class="fname">${esc(f.clause)}</span>
+          <span class="fsev">SEV ${f.severity}</span></div>
+        <div class="fissue">${esc(f.issue)}</div>
+        <div class="fask"><em>Ask for</em>${esc(f.counter)}</div>
+      </div>`).join('')}
+    <div class="eyebrow sub">Counter-offer</div>
+    <button class="btn btn-g" id="copy">Copy email</button>
+    <pre id="email">${esc(d.counter_offer_email)}</pre>
+    ${d.contract_uri ? `<div class="uri">Archived · ${esc(d.contract_uri)}</div>` : ''}`;
+
+  $('#pane').innerHTML = `<div id="doc">${redline(contract, d.findings)}</div>`;
+  $('#edit').hidden = false;
+  link();
+  $('#copy').onclick = async e => {
+    await navigator.clipboard.writeText(d.counter_offer_email);
+    e.target.textContent = 'Copied'; setTimeout(() => e.target.textContent = 'Copy email', 1600);
+  };
+}
+
+let lastContract = '', lastClient = 'Apex Dynamics LLC';
+
+function restoreEditor(value) {
+  $('#pane').innerHTML = `
+    <label for="client">Client</label>
+    <input id="client" value="${esc(lastClient)}" autocomplete="off">
+    <div style="height:14px"></div>
+    <label for="contract">Contract text</label>
+    <textarea id="contract" placeholder="Paste the agreement here."></textarea>`;
+  $('#contract').value = value ?? lastContract;
+  $('#edit').hidden = true;
+}
+
+$('#sample').onclick = async () => {
+  const s = await api('/api/sample'); if (!s) return;
+  lastClient = s.client_name;
+  restoreEditor(s.contract_text);
+};
+$('#edit').onclick = () => restoreEditor();
+
+$('#go').onclick = async () => {
+  const contract = ($('#contract')?.value ?? lastContract).trim();
+  const client = ($('#client')?.value ?? lastClient).trim();
+  if (!contract || !client) {
+    $('#out').innerHTML = `<div class="eyebrow">Verdict</div><div class="err">
+      <b>Nothing to review.</b> Add a client name and paste a contract, or press Load sample.</div>`;
+    return;
+  }
+  lastContract = contract; lastClient = client;
+  const btn = $('#go'); btn.disabled = true; btn.textContent = 'Reading…';
+  try {
+    const data = await api('/api/review', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({contract_text: contract, client_name: client})
+    });
+    if (data) { render(data, contract); loadStats(); }
+  } catch (e) {
+    $('#out').innerHTML = `<div class="eyebrow">Verdict</div><div class="err">
+      <b>Review failed.</b> ${esc(e.message)}</div>`;
+  } finally { btn.disabled = false; btn.textContent = 'Review contract'; }
+};
+
+/* ───────── dashboard ───────── */
+async function loadDashboard() {
+  let d;
+  try { d = await api('/api/dashboard'); if (!d) return; }
+  catch (e) { $('#d-cards').innerHTML = `<div style="grid-column:1/-1"><div class="err">
+    <b>Could not load the dashboard.</b> ${esc(e.message)}</div></div>`; return; }
+
+  $('#d-cards').innerHTML = [
+    ['reviews', 'contracts reviewed'], ['clients', 'clients'],
+    ['rules', 'rules remembered'], ['risks', 'past risks'],
+  ].map(([k, label]) => `<div><b>${d.counts[k]}</b><span>${label}</span></div>`).join('');
+
+  const peak = Math.max(1, ...(d.top_clauses || []).map(c => c.times_flagged));
+  $('#d-clauses').innerHTML = d.top_clauses?.length
+    ? d.top_clauses.map(c => `<tr>
+        <td>${esc(c.clause)}</td><td class="n">${c.severity}</td>
+        <td class="n"><i class="bar" style="width:${Math.round(c.times_flagged / peak * 54)}px"></i>${c.times_flagged}
+          <span class="muted">· ${c.clients} client${c.clients === 1 ? '' : 's'}</span></td></tr>`).join('')
+    : `<tr><td class="muted" colspan="3">No reviews yet.</td></tr>`;
+
+  $('#d-clients').innerHTML = d.clients?.length
+    ? d.clients.map(c => `<tr><td>${esc(c.client_name)}</td><td class="n">${c.reviews}</td>
+        <td class="n ${c.worst >= 70 ? 'hot' : ''}">${c.worst}</td></tr>`).join('')
+    : `<tr><td class="muted" colspan="3">No clients yet.</td></tr>`;
+
+  $('#d-recent').innerHTML = d.recent?.length
+    ? d.recent.map(r => `<tr><td class="n">${esc(r.ts)}</td><td>${esc(r.client_name)}</td>
+        <td class="n ${r.risk_score >= 70 ? 'hot' : ''}">${r.risk_score}</td>
+        <td class="n">${esc(r.recommendation)}</td><td class="n">${r.findings}</td></tr>`).join('')
+    : `<tr><td class="muted" colspan="5">Nothing reviewed yet.</td></tr>`;
+}
+
+/* ───────── settings ───────── */
+async function loadSettings() {
+  for (const ns of ['rules', 'risks']) {
+    const el = $(`#list-${ns}`);
+    try {
+      const d = await api(`/api/memory/items?namespace=${ns}`); if (!d) return;
+      el.innerHTML = d.items.length ? d.items.map(i => `
+        <div class="mem-item">
+          <span class="sev">SEV ${i.severity ?? '?'}</span>
+          <span class="txt">${esc(i.text)}</span>
+          <button type="button" data-id="${esc(i.id)}" data-ns="${ns}"
+                  aria-label="Remove this entry">Remove</button>
+        </div>`).join('')
+        : `<p class="muted" style="font-size:13px;padding-top:12px">Nothing stored yet.</p>`;
+    } catch (e) {
+      el.innerHTML = `<div class="err"><b>Could not load.</b> ${esc(e.message)}</div>`;
+    }
+  }
+  const m = await api('/api/memory').catch(() => null);
+  if (m) $('#s-runtime').innerHTML = [
+    ['Analyser', m.mode === 'mock' ? 'Deterministic clause engine (no API key)' : 'Live LLM'],
+    ['Review backend', esc(m.backend)],
+    ['Passcode protection', m.auth ? 'On' : 'Off — set APP_PASSCODE to enable'],
+  ].map(([k, v]) => `<tr><td class="n" style="width:190px">${k}</td><td>${v}</td></tr>`).join('');
+}
+
+// Delegated so it survives the list being re-rendered.
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('.mem-item button'); if (!btn) return;
+  btn.disabled = true; btn.textContent = 'Removing…';
+  try {
+    await api('/api/memory/items/delete', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({id: btn.dataset.id, namespace: btn.dataset.ns})
+    });
+    loadSettings(); loadStats();
+  } catch (err) { btn.disabled = false; btn.textContent = 'Remove'; alert(err.message); }
+});
+
+document.querySelectorAll('form.add').forEach(form => form.addEventListener('submit', async e => {
+  e.preventDefault();
+  const submit = form.querySelector('button');
+  submit.disabled = true; submit.textContent = 'Adding…';
+  try {
+    await api('/api/memory/items', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        namespace: form.dataset.ns,
+        severity: Number(form.querySelector('select').value),
+        text: form.querySelector('input').value.trim(),
+      })
+    });
+    form.querySelector('input').value = '';
+    loadSettings(); loadStats();
+  } catch (err) { alert(err.message); }
+  finally { submit.disabled = false; submit.textContent = 'Add'; }
+}));
+
+$('#logout').onclick = async () => {
+  await fetch('/api/logout', {method: 'POST'});
+  location.href = '/';
+};
+
+route();
+loadStats();
+</script>
+</body>
+</html>
