@@ -31,6 +31,27 @@ async def main(reset: bool) -> None:
             namespace_column="namespace",
         )
 
+        # 1b. C-SPANN — CockroachDB's distributed vector index. Without it every
+        # similarity search is a sequential scan of guardian_memory.
+        #
+        # Written as raw SQL on purpose, for two reasons the library gets wrong:
+        #
+        #  1. aapply_vector_index() emits `CREATE VECTOR INDEX ... (embedding)` with no
+        #     operator class and ignores CSPANNIndex.distance_strategy, so CockroachDB
+        #     defaults to vector_l2_ops. Our stores query with cosine (`<=>`), and an L2
+        #     index cannot serve a cosine query — it would exist and never be used.
+        #  2. Every retrieval filters by namespace, so namespace must be a prefix column.
+        #     Without it the planner falls back to guardian_memory_namespace_idx and the
+        #     vector index sits idle.
+        #
+        # Verified with EXPLAIN: the plan shows `vector search ... prefix spans: ['rules']`.
+        print(f"vector index   C-SPANN (cosine, namespace-prefixed) …")
+        async with engine.engine.begin() as conn:
+            await conn.execute(text(
+                "CREATE VECTOR INDEX IF NOT EXISTS guardian_memory_embedding_idx "
+                f"ON {config.VECTOR_TABLE} (namespace, embedding vector_cosine_ops)"
+            ))
+
         # 2. Episodic memory. The library creates this off any history instance.
         # NOTE: the public create_table_if_not_exists() wraps asyncio.run(), which
         # explodes inside a running loop. _acreate_table_if_not_exists() is the same
