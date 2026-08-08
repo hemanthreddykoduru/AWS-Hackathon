@@ -49,6 +49,7 @@ jobs:
           test -s build/site/landing.html
           test -s build/site/app.html
           test -s build/site/theme.css
+          test -s build/site/logo.svg
           # A missing API base ships a site whose every request 404s against S3.
           grep -q "$API_BASE" build/site/app.html
           grep -q "$API_BASE" build/site/landing.html

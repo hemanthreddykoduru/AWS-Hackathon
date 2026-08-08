@@ -31,7 +31,7 @@ fi
 echo "api   $API_BASE"
 
 rm -rf build/site && mkdir -p build/site
-cp ui/landing.html ui/app.html ui/theme.css ui/theme.js build/site/
+cp ui/landing.html ui/app.html ui/theme.css ui/theme.js ui/logo.svg build/site/
 # The local server generates this; a static bucket has to carry the file.
 printf '%s' '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="#F26522"/></svg>' \
   > build/site/favicon.svg
@@ -47,7 +47,7 @@ for name in ("landing.html", "app.html"):
     s = p.read_text()
     s = s.replace("const API = '';", f"const API = '{api}';")
     s = s.replace('href="/app"', 'href="app.html"')
-    s = s.replace('href="/favicon.ico"', 'href="favicon.svg"')
+    s = s.replace('href="/logo.svg"', 'href="logo.svg"')
     s = s.replace('href="/theme.css"', 'href="theme.css"')
     s = s.replace('src="/theme.js"', 'src="theme.js"')
     s = s.replace('href="/"', 'href="landing.html"')

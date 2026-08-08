@@ -105,6 +105,7 @@ def review_via_lambda(body: str) -> tuple[int, str]:
 STATIC = {
     "/theme.css": ("theme.css", "text/css; charset=utf-8"),
     "/theme.js": ("theme.js", "application/javascript; charset=utf-8"),
+    "/logo.svg": ("logo.svg", "image/svg+xml"),
 }
 FAVICON = (b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">'
            b'<rect width="16" height="16" fill="#F26522"/></svg>')

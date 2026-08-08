@@ -8,11 +8,23 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="icon" href="/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/logo.svg">
 <script>(() => { const t = localStorage.getItem('fg-theme');
   if (t) document.documentElement.dataset.theme = t; })();</script>
 <link rel="stylesheet" href="/theme.css">
 <style>
+  /* ---- logo mark ---- */
+  .mark{width:22px;height:22px;flex-shrink:0}
+  .mark rect{fill:var(--paper);stroke:var(--ink);stroke-width:1.6}
+  .mark .lines path{stroke:var(--ink);stroke-width:1.4;stroke-linecap:round;opacity:.5;fill:none}
+  .mark .strike{stroke:var(--no);stroke-width:2;stroke-linecap:round;fill:none;
+    stroke-dasharray:14;stroke-dashoffset:14}
+  @media (prefers-reduced-motion:no-preference){
+    .mark .strike{animation:strike .9s cubic-bezier(.2,.8,.3,1) .35s forwards}
+    @keyframes strike{to{stroke-dashoffset:0}}
+  }
+  @media (prefers-reduced-motion:reduce){.mark .strike{stroke-dashoffset:0}}
+
   html{scroll-behavior:smooth;scroll-padding-top:76px}
   .wrap{max-width:1140px;margin:0 auto;padding:0 28px}
   h2{font-size:32px;max-width:660px}
@@ -91,6 +103,30 @@
     display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
   footer a{color:var(--accent-deep)}
 
+  /* ---- motion ----
+     One idea: content settles into place as you reach it, and the live numbers
+     count up so they read as measured rather than typed in. Everything below is
+     opt-in via prefers-reduced-motion; the page is fully usable without any of it. */
+  @media (prefers-reduced-motion:no-preference){
+    .rv{opacity:0;transform:translateY(14px);
+        transition:opacity .55s ease,transform .55s cubic-bezier(.2,.8,.3,1)}
+    .rv.on{opacity:1;transform:none}
+    .rv-stagger>*{opacity:0;transform:translateY(12px);
+        transition:opacity .5s ease,transform .5s cubic-bezier(.2,.8,.3,1)}
+    .rv-stagger.on>*{opacity:1;transform:none}
+    .rv-stagger.on>*:nth-child(2){transition-delay:.08s}
+    .rv-stagger.on>*:nth-child(3){transition-delay:.16s}
+    .rv-stagger.on>*:nth-child(4){transition-delay:.24s}
+    /* the specimen's redlines draw themselves, like a pen going down the page */
+    .specimen mark.rl{background-size:0 100%;background-repeat:no-repeat;
+        transition:background-size .45s ease}
+    .specimen.on mark.rl{background-size:100% 100%}
+    .specimen.on mark.rl:nth-of-type(2){transition-delay:.12s}
+    .specimen.on mark.rl:nth-of-type(3){transition-delay:.24s}
+    .btn{transition:transform .15s ease,background .18s,border-color .18s}
+    .btn:active{transform:translateY(1px)}
+  }
+
   @media (max-width:900px){
     h1{font-size:36px} h2{font-size:26px}
     .hero-grid,.payoff{grid-template-columns:1fr;gap:40px}
@@ -103,7 +139,7 @@
 <body>
 
 <nav><div class="nav-in">
-  <a class="wordmark" href="/"><i></i>Freelance Guardian</a>
+  <a class="wordmark" href="/"><svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><rect x="6" y="2" width="20" height="28" rx="2"/><g class="lines"><path d="M10 9h12"/><path d="M10 15h12"/><path d="M10 21h12"/><path d="M10 25h8"/></g><path class="strike" d="M9 15h14"/></svg>Freelance Guardian</a>
   <div class="nav-right">
     <button id="theme" type="button">Dark</button>
     <a href="/app" class="btn btn-p btn-sm">Open the agent</a>
@@ -127,7 +163,7 @@
     </div>
   </div>
 
-  <div class="specimen">
+  <div class="specimen rv">
     <div class="specimen-bar">
       <span>apex-dynamics-llc · reviewed</span>
       <span class="verdict-chip">93 · REJECT</span>
@@ -150,8 +186,8 @@
 
 <section><div class="wrap">
   <div class="eyebrow">Live from the database</div>
-  <h2>This is not a mockup. These numbers come from the running agent.</h2>
-  <div class="stats" id="stats" style="margin-top:34px">
+  <h2 class="rv">This is not a mockup. These numbers come from the running agent.</h2>
+  <div class="stats rv rv-stagger" id="stats" style="margin-top:34px">
     <div class="stat"><b data-k="rules">–</b><span>rules remembered</span></div>
     <div class="stat"><b data-k="risks">–</b><span>past risks recorded</span></div>
     <div class="stat"><b data-k="reviews">–</b><span>contracts reviewed</span></div>
@@ -161,12 +197,12 @@
 
 <section id="memory"><div class="wrap">
   <div class="eyebrow">Architecture</div>
-  <h2>Agentic memory is not one thing. We store it as three.</h2>
+  <h2 class="rv">Agentic memory is not one thing. We store it as three.</h2>
   <p class="muted" style="margin-top:14px;max-width:640px">Each is read at a different
     moment, written by different code, and lives for a different length of time. Collapsing
     them into one vector store is what makes agents feel amnesiac despite “having RAG”.</p>
 
-  <div class="mem">
+  <div class="mem rv rv-stagger">
     <div>
       <div class="kind">Semantic</div>
       <h3>What I believe</h3>
@@ -194,8 +230,8 @@
 
 <section><div class="wrap">
   <div class="eyebrow">The workflow</div>
-  <h2>Four steps, every one of them written down.</h2>
-  <div class="flow">
+  <h2 class="rv">Four steps, every one of them written down.</h2>
+  <div class="flow rv rv-stagger">
     <div><div class="n">01</div><h4>ingest_contract</h4>
       <p>Archives the original to S3, then splits it into clauses.</p></div>
     <div><div class="n">02</div><h4>retrieve_memory</h4>
@@ -209,11 +245,11 @@
 
 <section><div class="wrap">
   <div class="eyebrow">The payoff</div>
-  <h2>A clause flagged across many clients isn't a client problem.</h2>
+  <h2 class="rv">A clause flagged across many clients isn't a client problem.</h2>
   <p class="muted" style="margin-top:14px;max-width:620px">It's a missing term in
     <em>your</em> contract. No single review can reach that conclusion — it only exists
     because every decision was written somewhere queryable.</p>
-  <div class="payoff">
+  <div class="payoff rv">
     <table>
       <thead><tr><th>Clause</th><th>Severity</th><th>Times flagged</th></tr></thead>
       <tbody id="clauses"><tr><td class="muted" colspan="3">loading…</td></tr></tbody>
@@ -243,12 +279,35 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g,
 
 // The stats and the clause table are the page's central claim — that this is live.
 // If the agent is not running, say so plainly rather than showing invented numbers.
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Reveal on approach. Unobserve after firing so scrolling back up does not replay.
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  e.target.classList.add('on');
+  io.unobserve(e.target);
+}), {threshold: .18, rootMargin: '0px 0px -40px'});
+document.querySelectorAll('.rv, .specimen').forEach(el => io.observe(el));
+
+// Count toward the real value. Never invents one — if the fetch failed the cell
+// stays blank rather than animating to a number nobody measured.
+function countTo(el, target) {
+  if (reduced || target > 9999) { el.textContent = target; return; }
+  const t0 = performance.now(), dur = 900;
+  (function step(t) {
+    const p = Math.min((t - t0) / dur, 1);
+    el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+    if (p < 1) requestAnimationFrame(step);
+  })(t0);
+}
+
 (async () => {
   try {
     const m = await (await fetch(`${API}/api/memory`)).json();
     if (m.error) throw new Error(m.error);
     for (const [k, v] of Object.entries(m))
-      document.querySelectorAll(`[data-k="${k}"]`).forEach(el => el.textContent = v);
+      document.querySelectorAll(`[data-k="${k}"]`).forEach(el =>
+        typeof v === 'number' ? countTo(el, v) : el.textContent = v);
   } catch {
     document.querySelectorAll('[data-k]').forEach(el => el.textContent = '—');
     document.getElementById('stats').insertAdjacentHTML('afterend',
