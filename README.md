@@ -39,6 +39,80 @@ ingest_contract ─► retrieve_memory ─► analyze_contract ─► save_state
     chunking)         search + history)    clause engine)        thread + checkpoint)
 ```
 
+## CockroachDB tools used
+
+The hackathon requires at least two. These two are wired into code and verifiable — we
+claim only what runs.
+
+### 1. Distributed Vector Indexing (C-SPANN)
+
+`scripts/init_db.py` creates a C-SPANN index over the embedding column, prefixed by
+`namespace` because every retrieval filters on it:
+
+```sql
+CREATE VECTOR INDEX guardian_memory_embedding_idx
+    ON guardian_memory (namespace, embedding vector_cosine_ops)
+```
+
+Two details matter, and both were found the hard way. The index must be
+`vector_cosine_ops` because the stores query with `<=>`; an L2 index cannot serve a cosine
+query and would sit unused. And `namespace` must be a prefix column, or the planner falls
+back to `guardian_memory_namespace_idx` and ignores the vector index entirely.
+
+Prove it is actually in the query path — not merely present:
+
+```
+EXPLAIN SELECT content FROM guardian_memory
+WHERE namespace = 'rules' ORDER BY embedding <=> '[…]'::VECTOR LIMIT 4;
+
+  • vector search
+    table: guardian_memory@guardian_memory_embedding_idx
+    prefix spans: [/'rules' - /'rules']
+```
+
+### 2. ccloud CLI (Agent-Ready)
+
+`scripts/cluster_info.sh` uses ccloud for cluster inventory and, crucially, to hand back
+the connection string — so no connection string in this project is transcribed by hand.
+
+```bash
+brew install cockroachdb/tap/ccloud
+ccloud auth login
+./scripts/cluster_info.sh
+```
+
+```
+═══ clusters in this organization ═══
+NAME                ID                                    PLAN TYPE  STATE    CLOUD  VERSION
+freelance-guardian  bfcceaa8-bfe3-44b4-9542-1598dc21450b  BASIC      CREATED  AWS    v26.2.5
+
+═══ agent memory (via the connection string ccloud returns) ═══
+  risks    12 entries
+  rules    14 entries
+  reviews  26 across 9 clients
+  index    VECTOR INDEX guardian_memory_embedding_idx (namespace, embedding vector_cosine_ops)
+```
+
+### Also present, but we do not count them
+
+- **Managed MCP Server** — [`.mcp.json`](.mcp.json) ships with the cluster id, and
+  [`skills/audit-memory/SKILL.md`](skills/audit-memory/SKILL.md) is an Agent Skill built
+  entirely around it, with every query verified against the live cluster. It is a genuine
+  inspection surface for judges, but application code never calls it, so we do not list it
+  among our two.
+- **Agent Skills Repo** — our skill follows the upstream format and
+  [`skills/README.md`](skills/README.md) points at `cockroachlabs/cockroachdb-skills`, but
+  we reference rather than vendor it.
+
+## AWS services used
+
+- **AWS Lambda** — `freelance-guardian` (python3.11, arm64, ap-south-1, same region as the
+  cluster so DB round-trips stay local). Every review executes here. Deployed by
+  `scripts/deploy_aws.sh`.
+- **Amazon S3** — `freelance-guardian-<account>`, private. Each contract is archived before
+  analysis and its URI stored in `agent_audit_log.contract_uri`, so every decision points
+  back at the exact bytes it was made from.
+
 ## Stack
 
 - **CockroachDB Cloud (Free Tier)** — `langchain-cockroachdb` (vector store, chat history, LangGraph checkpointer)
