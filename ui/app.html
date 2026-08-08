@@ -230,12 +230,15 @@
 
 <script src="/theme.js"></script>
 <script>
+// Empty = same origin (local server). scripts/build_site.sh rewrites this to the
+// API Gateway base URL for the static S3 deployment, where there is no server.
+const API = '';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g,
   c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 async function api(path, opts) {
-  const res = await fetch(path, opts);
+  const res = await fetch(`${API}${path}`, opts);
   if (res.status === 401) { location.href = '/login?next=' + encodeURIComponent(location.pathname + location.hash); return null; }
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -475,7 +478,7 @@ document.querySelectorAll('form.add').forEach(form => form.addEventListener('sub
 }));
 
 $('#logout').onclick = async () => {
-  await fetch('/api/logout', {method: 'POST'});
+  await fetch(`${API}/api/logout`, {method: 'POST'});
   location.href = '/';
 };
 
