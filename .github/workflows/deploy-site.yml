@@ -57,6 +57,24 @@ jobs:
           ! test -e build/site/login.html
           echo "build verified"
 
+      # AWS rejected the token with "Not authorized to perform
+      # sts:AssumeRoleWithWebIdentity" while the trust policy looked correct. Print the
+      # claims IAM actually evaluates — sub and aud only, never the token itself.
+      - name: Show the OIDC claims IAM will match against
+        run: |
+          TOKEN=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | python3 -c 'import json,sys;print(json.load(sys.stdin)["value"])')
+          python3 - "$TOKEN" <<'PY'
+          import base64, json, sys
+          payload = sys.argv[1].split(".")[1]
+          payload += "=" * (-len(payload) % 4)
+          claims = json.loads(base64.urlsafe_b64decode(payload))
+          print("  iss:", claims.get("iss"))
+          print("  aud:", claims.get("aud"))
+          print("  sub:", claims.get("sub"))
+          print("  repository:", claims.get("repository"))
+          PY
+
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::933036664603:role/freelance-guardian-gha
