@@ -36,12 +36,15 @@
   .nav-links a:not(.btn):hover{color:var(--ink)}
 
   /* ---- the pen line: reading progress, drawn down the margin ---- */
-  #pen{position:fixed;left:max(24px,calc(50vw - 590px + 28px));top:76px;bottom:24px;width:2px;
+  /* Sits in the margin OUTSIDE the sheet. Anchoring it to the sheet's padding edge
+     put it on top of the first character of every line. Hidden entirely once the
+     viewport is too narrow for a margin to exist. */
+  #pen{position:fixed;left:calc(50vw - 590px - 26px);top:76px;bottom:24px;width:2px;
     background:var(--line);z-index:40;pointer-events:none}
   #pen i{position:absolute;inset:0 0 auto 0;height:0;background:var(--no);display:block}
   #pen b{position:absolute;left:-3px;width:8px;height:8px;border-radius:50%;background:var(--no);
     top:0;transform:translateY(-4px)}
-  @media (max-width:1080px){#pen{display:none}}
+  @media (max-width:1260px){#pen{display:none}}
 
   /* ---- clause layout: number + rule in the gutter, body to the right ---- */
   .clause{padding:84px 0;border-bottom:1px solid var(--line);position:relative}
@@ -112,6 +115,48 @@
   .lg b{display:block;font-family:var(--tight);font-size:32px;font-weight:700;letter-spacing:-.02em}
   .lg span{font-family:var(--ui);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
   .ledger-note{font-family:var(--ui);font-size:11px;color:var(--accent-deep);padding:14px 0 22px}
+
+
+  /* ---- the memory cards (replaces three paragraphs) ---- */
+  .mem3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);margin-top:32px}
+  .mem3>div{background:var(--paper);padding:22px 20px;position:relative}
+  .mem3 .k{font-family:var(--ui);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--accent-deep)}
+  .mem3 h3{font-size:15px;margin:8px 0 6px;font-weight:600}
+  .mem3 p{font-size:13px;color:var(--muted)}
+  .mem3 code{font-family:var(--ui);font-size:10.5px;color:var(--muted);display:block;margin-top:10px}
+  .mem3 b{position:absolute;top:18px;right:20px;font-family:var(--tight);font-size:22px;
+    font-weight:700;color:var(--accent)}
+
+  /* ---- verify it yourself: a real review, run from this page ---- */
+  .verify{border:1px solid var(--line);border-radius:4px;background:var(--paper);margin-top:32px;
+    overflow:hidden}
+  .v-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 20px;
+    border-bottom:1px solid var(--line);background:var(--accent-soft)}
+  .v-head p{font-size:13px;color:var(--muted);margin-right:auto;max-width:44ch}
+  .v-body{padding:0;min-height:190px;display:grid;grid-template-columns:190px minmax(0,1fr)}
+  .v-score{border-right:1px solid var(--line);padding:22px 20px;text-align:center}
+  .v-score b{display:block;font-family:var(--tight);font-size:60px;font-weight:700;
+    letter-spacing:-.04em;line-height:1}
+  .v-score span{font-family:var(--ui);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    display:block;margin-top:6px}
+  .v-score.reject b,.v-score.reject span{color:var(--no)}
+  .v-score.accept b,.v-score.accept span{color:var(--ok)}
+  .v-score.negotiate b,.v-score.negotiate span{color:var(--accent-deep)}
+  .v-list{padding:14px 20px;max-height:280px;overflow-y:auto}
+  .v-f{display:flex;gap:12px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line);
+    font-size:13px;animation:stamp .3s cubic-bezier(.2,.8,.3,1) backwards}
+  .v-f:first-child{border-top:none}
+  @keyframes stamp{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+  .v-f .sev{font-family:var(--ui);font-size:9.5px;letter-spacing:.08em;padding:2px 6px;
+    border-radius:3px;background:var(--no);color:#fff;flex-shrink:0}
+  .v-f .sev.gap{background:var(--accent)}
+  .v-idle{padding:52px 20px;text-align:center;color:var(--muted);font-size:14px}
+  .v-foot{border-top:1px solid var(--line);padding:12px 20px;font-family:var(--ui);
+    font-size:10.5px;color:var(--muted);word-break:break-all}
+  @media (max-width:900px){.v-body{grid-template-columns:1fr}
+    .v-score{border-right:none;border-bottom:1px solid var(--line)}}
 
   /* ---- reusable pieces inside clauses ---- */
   .rows{margin-top:34px;border-top:1px solid var(--line)}
@@ -303,28 +348,21 @@
   <div class="cl-no">01</div>
   <div class="cl-body">
     <h2>Memory isn't one thing. This agent keeps three.</h2>
-    <p class="lede-s">Each is read at a different moment, written by different code, and lives for
-      a different length of time. <b>Collapsing them into one vector store</b> is what makes agents
-      feel amnesiac despite "having RAG".</p>
+    <p class="lede-s">Read at different moments, written by different code.
+      <b>Collapsing them into one vector store</b> is what makes agents feel amnesiac.</p>
 
-    <div class="rows rv">
-      <div class="row"><div class="k">Semantic</div>
-        <div><h3>What I believe</h3>
-          <p>Your standing terms, and the clause patterns that have harmed you before. Searched
-            once per clause, over a distributed vector index.</p>
-          <code>AsyncCockroachDBVectorStore → guardian_memory</code></div></div>
-      <div class="row"><div class="k">Episodic</div>
-        <div><h3>What happened with this client</h3>
-          <p>One durable thread per client. Reopening it months later replays the whole
-            negotiation, so nothing you already conceded gets re-demanded.</p>
-          <code>CockroachDBChatMessageHistory → guardian_chat_history</code></div></div>
-      <div class="row"><div class="k">Procedural</div>
-        <div><h3>Where the work got to</h3>
-          <p>Workflow state written after every step. Kill it mid-review and the next run picks
-            up from the last completed node.</p>
-          <code>AsyncCockroachDBSaver → checkpoints</code></div></div>
+    <div class="mem3 rv">
+      <div><span class="k">Semantic</span><h3>What I believe</h3>
+        <p>Your rules, and the clauses that burned you. Searched once per clause.</p>
+        <code>guardian_memory</code><b data-k="rules">–</b></div>
+      <div><span class="k">Episodic</span><h3>What happened here before</h3>
+        <p>One durable thread per client, replayed on every review.</p>
+        <code>guardian_chat_history</code><b data-k="reviews">–</b></div>
+      <div><span class="k">Procedural</span><h3>Where the work got to</h3>
+        <p>State written after each node. Killed mid-run, it resumes.</p>
+        <code>checkpoints</code><b>4 nodes</b></div>
     </div>
-  </div>
+
   <aside class="note rv"><em>Margin note</em>
     Three memories, one cluster. A judge can open it and read every one.</aside>
 </div></section>
@@ -334,8 +372,7 @@
   <div class="cl-no">02</div>
   <div class="cl-body">
     <h2>Four steps, and every one of them written down.</h2>
-    <p class="lede-s">The same nodes run on every contract, and <b>each boundary is a checkpoint</b>
-      persisted to CockroachDB. Nothing about the run is held only in memory.</p>
+    <p class="lede-s"><b>Each boundary is a checkpoint</b> persisted to CockroachDB.</p>
 
     <div class="fig rv">
       <svg viewBox="0 0 1000 190" aria-label="The four-node review pipeline">
@@ -377,10 +414,8 @@
   <div class="cl-no">03</div>
   <div class="cl-body">
     <h2>The dangerous contract is the one that looks fine.</h2>
-    <p class="lede-s">Pattern matching finds bad clauses that are <em>present</em>. It cannot see a
-      protection that was simply never written — which is exactly how a polished, well-drafted
-      template still leaves you exposed. <b>So the whole rule set is checked against the
-      document</b>, and what nobody wrote down gets raised too.</p>
+    <p class="lede-s">Pattern matching sees clauses that are <em>present</em>. It cannot see a
+      protection nobody wrote. <b>So the whole rule set is checked against the document.</b></p>
 
     <div class="fig rv">
       <svg viewBox="0 0 1000 220" aria-label="How a missing protection is detected">
@@ -422,9 +457,8 @@
   <div class="cl-no">04</div>
   <div class="cl-body">
     <h2>The second review starts where the first one ended.</h2>
-    <p class="lede-s">This is the whole claim, and it is checkable. Run the same contract twice for
-      the same client and watch the agent arrive already knowing them. <b>Every number below is
-      asserted by the test suite</b>, not described.</p>
+    <p class="lede-s">Same contract, same client, twice. <b>Every number below is asserted by
+      the test suite</b> — not described.</p>
 
     <div class="grew after rv">
       <div>
@@ -446,6 +480,18 @@
         </dl>
       </div>
     </div>
+    <div class="verify rv">
+      <div class="v-head">
+        <p>Don't take the page's word for it — run a review against the live agent now.</p>
+        <button class="btn btn-p btn-sm" id="vrun">Run a live review</button>
+      </div>
+      <div class="v-body" id="vbody">
+        <div class="v-idle" style="grid-column:1/-1">Press the button. The contract goes to AWS
+          Lambda, memory is read from CockroachDB, and the verdict comes back here.</div>
+      </div>
+      <div class="v-foot" id="vfoot">Nothing run yet.</div>
+    </div>
+
     <p class="figcap" style="margin-top:14px"><b>Fig. 3</b> — output of
       <code style="font-family:var(--ui)">scripts/test_graph.py</code> run twice. The test fails if
       any of these stops growing.</p>
@@ -702,6 +748,55 @@ const dio = new IntersectionObserver(es => es.forEach(e => {
   dio.unobserve(e.target);
 }), {threshold: .3});
 dio.observe(document.querySelector('.doc'));
+
+/* ───────── verify it yourself ─────────
+   A real POST to the live agent. Everything shown is from the response — if it fails,
+   the failure is shown rather than a canned result. */
+const vrun = document.getElementById('vrun'), vbody = document.getElementById('vbody'),
+      vfoot = document.getElementById('vfoot');
+
+const SAMPLE = `1. SCOPE. Contractor shall deliver the brand system and such other duties as the Client may reasonably require.
+2. REVISIONS. Client is entitled to unlimited revisions until Client is fully satisfied in Client's sole discretion.
+3. FEE. Total fee USD 6,000 payable Net 60 following written acceptance. No deposit shall be made.
+4. IP. All work product shall be the property of Client immediately upon creation, whether or not payment has been made.
+5. LIABILITY. Contractor shall indemnify Client from any and all claims without limitation as to amount.`;
+
+vrun.addEventListener('click', async () => {
+  vrun.disabled = true; vrun.textContent = 'Reviewing…';
+  vbody.innerHTML = '<div class="v-idle" style="grid-column:1/-1">Reading memory…</div>';
+  vfoot.textContent = 'POST /api/review → AWS Lambda';
+  const t0 = performance.now();
+  try {
+    const res = await fetch(`${API}/api/review`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({contract_text: SAMPLE, client_name: 'Live Verification'}),
+    });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.error || `HTTP ${res.status}`);
+    const ms = Math.round(performance.now() - t0);
+    const mem = d.memory_used || {};
+
+    vbody.innerHTML =
+      `<div class="v-score ${esc(d.recommendation)}"><b>${d.risk_score}</b>` +
+      `<span>${esc(d.recommendation)}</span></div>` +
+      `<div class="v-list">` +
+      d.findings.map((f, i) =>
+        `<div class="v-f" style="animation-delay:${i * 70}ms">` +
+        `<span class="sev${String(f.clause).startsWith('Missing') || f.kind === 'gap' ? ' gap' : ''}">` +
+        `SEV ${f.severity}</span><span>${esc(f.clause)}</span></div>`).join('') +
+      `</div>`;
+
+    vfoot.textContent =
+      `${ms} ms · ${mem.rules?.length ?? 0} rules and ${mem.risks?.length ?? 0} past risks recalled · ` +
+      `${mem.prior_messages ?? 0} prior messages · archived to ${d.contract_uri || 'local storage'}`;
+  } catch (e) {
+    vbody.innerHTML = `<div class="v-idle" style="grid-column:1/-1;color:var(--no)">` +
+      `Could not reach the agent: ${esc(e.message)}</div>`;
+    vfoot.textContent = 'The failure is shown rather than a canned result.';
+  } finally {
+    vrun.disabled = false; vrun.textContent = 'Run it again';
+  }
+});
 
 /* ───────── FAQ ───────── */
 document.querySelectorAll('.faq-q').forEach(q => q.addEventListener('click', () => {

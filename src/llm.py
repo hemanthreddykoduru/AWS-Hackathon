@@ -134,17 +134,40 @@ COVERAGE: list[tuple[str, str, str, int, str]] = [
      "An itemised, written scope. Anything further is a change order."),
 ]
 
+# A topic already raised as a bad clause must not also be raised as missing — the
+# contract plainly addresses it, just badly. Detecting that a clause is present is the
+# clause patterns' job; this maps their finding back to the coverage topic it settles.
+SETTLED_BY: dict[str, str] = {
+    "Unlimited revisions": "Revision cap",
+    "Payment terms": "Late-payment remedy",
+    "IP assignment timing": "IP timing",
+    "No deposit": "Deposit",
+    "Uncapped liability": "Liability cap",
+    "Open-ended scope": "Scope definition",
+    "Portfolio restriction": "Portfolio rights",
+    "No late-payment remedy": "Late-payment remedy",
+}
+
 # A template still full of [placeholders] is not a contract yet — "accept as written"
 # would be a meaningless verdict when the terms are literally unwritten.
 PLACEHOLDER = re.compile(r"\[[^\]\n]{1,40}\]")
 
 
-def find_gaps(contract_text: str, rules: list[dict]) -> list[dict]:
-    """Protections your standing rules require that this contract never mentions."""
+def find_gaps(contract_text: str, rules: list[dict],
+              already_flagged: list[str] | None = None) -> list[dict]:
+    """Protections your standing rules require that this contract never mentions.
+
+    `already_flagged` are clause names the pattern pass matched. A topic they settle is
+    skipped: the contract does address it, just badly, and reporting it as both present
+    and missing is a contradiction a reader would rightly not trust.
+    """
+    settled = {SETTLED_BY[name] for name in (already_flagged or []) if name in SETTLED_BY}
     recalled = " ".join(r.get("text", "") for r in rules).lower()
     body = contract_text.lower()
     gaps = []
     for topic, rule_pat, covered_pat, sev, ask in COVERAGE:
+        if topic in settled:
+            continue                                   # present and already flagged
         if not re.search(rule_pat, recalled):
             continue                                   # memory did not raise this topic
         if re.search(covered_pat, body):
@@ -238,7 +261,9 @@ def mock_analyze(
     present = len(findings)
 
     # What the contract does not say. Driven by the rules memory actually recalled.
-    gaps = find_gaps(contract_text, all_rules if all_rules is not None else rules)
+    gaps = find_gaps(contract_text,
+                     all_rules if all_rules is not None else rules,
+                     already_flagged=[f["clause"] for f in findings])
     blank = find_placeholders(contract_text)
     if blank:
         gaps.append(blank)
@@ -379,6 +404,13 @@ if __name__ == "__main__":
     # Rule recalled and contract addresses it -> no gap.
     assert find_gaps(clean_but_silent + "Contractor may display work in a portfolio.",
                      portfolio_rule) == []
+
+    # ---- a topic cannot be both present-and-bad and missing ------------------
+    ip_rule = [{"text": "Never transfer copyright before final payment clears."}]
+    both = mock_analyze(awful, ip_rule, [], [], "Acme", all_rules=ip_rule)
+    names = [f["clause"] for f in both["findings"]]
+    assert "IP assignment timing" in names, names
+    assert "Missing: IP timing" not in names, f"contradiction: {names}"
 
     # ---- unfilled templates are not reviewable ------------------------------
     assert find_placeholders("payable within [7/15/30] days") is None      # 1 hit, ignored
