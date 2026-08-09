@@ -13,30 +13,118 @@
   if (t) document.documentElement.dataset.theme = t; })();</script>
 <link rel="stylesheet" href="/theme.css">
 <style>
-  html{scroll-behavior:smooth;scroll-padding-top:76px}
-  body{overflow-x:hidden}
-  .wrap{max-width:var(--page);margin:0 auto;padding:0 28px}
+  /* ═══════════════════════════════════════════════════════════════════════════
+     The page is the contract.
 
-  #prog{position:fixed;top:0;left:0;height:2px;width:0;background:var(--accent);z-index:90}
+     The product's one distinctive act is the redline — striking the offending
+     words inside the document rather than listing complaints beside it. So the
+     page is laid out as a document under review: a pen line runs down the left
+     gutter as you scroll, sections are numbered like clauses, and the agent
+     annotates them in the margin in red pen. Every structural device here means
+     something about contract review; none of it is decoration.
+     ═══════════════════════════════════════════════════════════════════════════ */
+
+  html{scroll-behavior:smooth;scroll-padding-top:80px}
+  body{overflow-x:hidden}
+  .sheet{max-width:1180px;margin:0 auto;padding:0 28px}
+
   nav{transition:box-shadow .25s}
-  nav.scrolled{box-shadow:0 1px 0 var(--line),0 8px 24px rgba(23,20,18,.07)}
-  .nav-links{display:flex;align-items:center;gap:24px;margin-left:auto;flex-wrap:wrap}
-  .nav-links a:not(.btn){font-family:var(--ui);font-size:11.5px;letter-spacing:.09em;
+  nav.scrolled{box-shadow:0 1px 0 var(--line),0 10px 26px rgba(23,20,18,.07)}
+  .nav-links{display:flex;align-items:center;gap:22px;margin-left:auto;flex-wrap:wrap}
+  .nav-links a:not(.btn){font-family:var(--ui);font-size:11px;letter-spacing:.09em;
     text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .15s}
   .nav-links a:not(.btn):hover{color:var(--ink)}
 
-  h2{font-size:34px;max-width:680px}
-  .sec-body{color:var(--muted);margin-top:16px;max-width:640px;font-size:16px}
-  .sec-body b{color:var(--ink);font-weight:600}
-  .step-sec{padding:88px 0;border-bottom:1px solid var(--line)}
-  .num-grid{display:grid;grid-template-columns:120px 1fr;gap:48px}
-  .sec-num{font-family:var(--ui);font-size:13px;color:var(--accent);letter-spacing:.08em}
-  .sec-num::after{content:"";display:block;width:32px;height:1px;background:var(--line);margin-top:14px}
+  /* ---- the pen line: reading progress, drawn down the margin ---- */
+  #pen{position:fixed;left:max(24px,calc(50vw - 590px + 28px));top:76px;bottom:24px;width:2px;
+    background:var(--line);z-index:40;pointer-events:none}
+  #pen i{position:absolute;inset:0 0 auto 0;height:0;background:var(--no);display:block}
+  #pen b{position:absolute;left:-3px;width:8px;height:8px;border-radius:50%;background:var(--no);
+    top:0;transform:translateY(-4px)}
+  @media (max-width:1080px){#pen{display:none}}
 
-  .fig{margin-top:40px;overflow-x:auto}
+  /* ---- clause layout: number + rule in the gutter, body to the right ---- */
+  .clause{padding:84px 0;border-bottom:1px solid var(--line);position:relative}
+  .clause-in{display:grid;grid-template-columns:112px minmax(0,1fr) 200px;gap:40px;align-items:start}
+  .cl-no{font-family:var(--ui);font-size:12px;color:var(--accent);letter-spacing:.1em;
+    padding-top:6px;position:sticky;top:96px}
+  .cl-no::after{content:"";display:block;width:28px;height:1px;background:var(--line);margin-top:12px}
+  .cl-body h2{font-size:33px;max-width:640px}
+  .cl-body .lede-s{color:var(--muted);margin-top:16px;max-width:600px;font-size:16px}
+  .cl-body .lede-s b{color:var(--ink);font-weight:600}
+
+  /* the agent's voice, in the margin, in pen */
+  .note{font-family:var(--ui);font-size:11.5px;line-height:1.65;color:var(--no);
+    border-left:2px solid var(--no);padding:2px 0 2px 12px;margin-top:8px;position:sticky;top:96px}
+  .note em{display:block;font-style:normal;color:var(--muted);font-size:10px;letter-spacing:.1em;
+    text-transform:uppercase;margin-bottom:5px}
+
+  /* ---- hero ---- */
+  .hero{padding:76px 0 68px;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
+  .hero::before{content:"";position:absolute;top:-240px;right:-200px;width:640px;height:640px;
+    border-radius:50%;background:radial-gradient(circle,rgba(242,101,34,.10),transparent 65%);
+    pointer-events:none}
+  .hero-in{display:grid;grid-template-columns:.94fr 1.06fr;gap:54px;align-items:center;position:relative}
+  h1{font-size:52px}
+  h1 em{font-style:normal;color:var(--accent)}
+  .lede{color:var(--muted);font-size:17px;margin:22px 0 30px;max-width:480px}
+  .lede b{color:var(--ink);font-weight:600}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap}
+  .hero-note{margin-top:26px;font-family:var(--ui);font-size:11.5px;color:var(--muted)}
+  .hero-note span{margin-right:18px}.hero-note b{color:var(--ink);font-weight:500}
+
+  /* ---- the document being marked up: the signature element ---- */
+  .doc{border:1px solid var(--line);background:var(--paper);border-radius:4px;
+    box-shadow:0 1px 2px rgba(23,20,18,.05),0 26px 52px -26px rgba(23,20,18,.22);overflow:hidden}
+  .doc-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:11px 18px;border-bottom:1px solid var(--line);font-family:var(--ui);
+    font-size:11px;color:var(--muted)}
+  .verdict-chip{font-family:var(--ui);font-size:11px;letter-spacing:.1em;padding:4px 10px;
+    border-radius:999px;opacity:0;transition:opacity .4s}
+  .verdict-chip.on{opacity:1}
+  .verdict-chip.rej{background:var(--no-soft);color:var(--no);border:1px solid var(--no)}
+  .verdict-chip.acc{background:#EAF5EE;color:var(--ok);border:1px solid var(--ok)}
+  .verdict-chip.neg{background:var(--accent-soft);color:var(--accent-deep);border:1px solid var(--accent)}
+  .doc-body{padding:22px 24px;font-size:13.5px;line-height:1.85;min-height:330px}
+  .doc-body p{margin-bottom:15px}
+  .doc-body .cl{font-family:var(--ui);font-size:10px;letter-spacing:.12em;color:var(--muted);
+    display:block;margin-bottom:3px}
+  /* each strike wipes across the words rather than appearing */
+  .doc-body s{text-decoration:none;background-image:linear-gradient(var(--no),var(--no));
+    background-repeat:no-repeat;background-position:0 58%;background-size:0 1.5px;
+    transition:background-size .42s cubic-bezier(.3,.8,.3,1),color .42s}
+  .doc-body s.struck{background-size:100% 1.5px}
+  .doc-body s.struck{color:var(--muted)}
+  .doc-foot{border-top:1px solid var(--line);background:var(--accent-soft);padding:13px 18px;
+    font-size:12.5px;min-height:52px}
+  .doc-foot em{font-family:var(--ui);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent-deep);font-style:normal;margin-right:8px}
+  .doc-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--line)}
+  .dtab{font-family:var(--ui);font-size:11px;padding:7px 12px;border-radius:999px;cursor:pointer;
+    border:1px solid var(--line);background:var(--paper);color:var(--ink);transition:all .15s}
+  .dtab:hover{border-color:var(--accent);color:var(--accent-deep)}
+  .dtab.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+  /* ---- the ledger: live counts, stamped ---- */
+  .ledger{border-bottom:1px solid var(--line);background:var(--accent-soft)}
+  .ledger-in{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line)}
+  .lg{background:var(--accent-soft);padding:26px 24px}
+  .lg b{display:block;font-family:var(--tight);font-size:32px;font-weight:700;letter-spacing:-.02em}
+  .lg span{font-family:var(--ui);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .ledger-note{font-family:var(--ui);font-size:11px;color:var(--accent-deep);padding:14px 0 22px}
+
+  /* ---- reusable pieces inside clauses ---- */
+  .rows{margin-top:34px;border-top:1px solid var(--line)}
+  .row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:26px;padding:20px 0;
+    border-bottom:1px solid var(--line);align-items:start}
+  .row .k{font-family:var(--ui);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--accent-deep)}
+  .row h3{font-size:15.5px;font-weight:600;margin-bottom:5px}
+  .row p{font-size:13.5px;color:var(--muted)}
+  .row code{font-family:var(--ui);font-size:11px;color:var(--muted);display:block;margin-top:8px}
+
+  .fig{margin-top:34px;overflow-x:auto}
   .figcap{margin-top:12px;font-family:var(--ui);font-size:11px;color:var(--muted)}
-  .figcap::before{content:"";display:inline-block;width:18px;height:1px;background:var(--accent);
-    margin-right:10px;vertical-align:middle}
   .figcap b{color:var(--accent-deep);font-weight:500}
   svg text{font-family:var(--ui)}
   svg .m{font-size:10px;fill:var(--muted)}
@@ -46,155 +134,68 @@
   @keyframes dash{to{stroke-dashoffset:-11}}
   .pulse-dot{fill:var(--accent)}
 
-  /* ---- hero ---- */
-  .hero{padding:80px 0 70px;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
-  .hero::before{content:"";position:absolute;top:-220px;right:-180px;width:620px;height:620px;
-    border-radius:50%;background:radial-gradient(circle,rgba(242,101,34,.09),transparent 65%);
-    pointer-events:none}
-  .hero-grid{display:grid;grid-template-columns:.92fr 1.08fr;gap:52px;align-items:center;position:relative}
-  h1{font-size:50px}
-  h1 em{font-style:normal;color:var(--accent)}
-  .lede{color:var(--muted);font-size:17px;margin:22px 0 30px;max-width:470px}
-  .lede b{color:var(--ink);font-weight:600}
-  .hero-cta{display:flex;gap:12px;flex-wrap:wrap}
-  .hero-note{margin-top:26px;font-family:var(--ui);font-size:11.5px;color:var(--muted)}
-  .hero-note span{margin-right:18px}.hero-note b{color:var(--ink);font-weight:500}
+  /* the memory-grows proof */
+  .grew{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);
+    border:1px solid var(--line);margin-top:34px}
+  .grew>div{background:var(--paper);padding:24px 22px}
+  .grew .when{font-family:var(--ui);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:14px}
+  .grew.after>div:last-child{background:var(--accent-soft)}
+  .grew dl{display:grid;grid-template-columns:1fr auto;gap:9px 14px;font-size:13px}
+  .grew dt{color:var(--muted)}
+  .grew dd{font-family:var(--ui);font-size:12.5px;text-align:right}
+  .grew dd.up{color:var(--accent-deep);font-weight:500}
 
-  /* ---- the demo window: a replay of real agent output ---- */
-  .demo-win{border:1px solid var(--line);background:var(--paper);border-radius:6px;overflow:hidden;
-    box-shadow:0 1px 2px rgba(23,20,18,.05),0 24px 48px -24px rgba(23,20,18,.2)}
-  .demo-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;
-    border-bottom:1px solid var(--line);background:var(--paper)}
-  .demo-bar .ctx{font-family:var(--ui);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px}
-  .ctx .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:blink 1.8s infinite}
-  @keyframes blink{50%{opacity:.3}}
-  .demo-grid{display:grid;grid-template-columns:1fr 1fr;min-height:400px}
-  .dchat{border-right:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:10px;
-    background:var(--accent-soft);overflow-y:auto;max-height:452px}
-  .who-l{font-family:var(--ui);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
-    color:var(--muted);margin-bottom:2px}
-  .bub{max-width:94%;padding:10px 13px;border-radius:10px;font-size:13px;animation:pop .3s ease}
-  @keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-  .bub.doc{align-self:flex-start;background:var(--paper);border:1px solid var(--line);
-    border-bottom-left-radius:3px;font-family:var(--ui);font-size:11px;line-height:1.65;
-    white-space:pre-wrap}
-  .bub.doc mark{background:var(--no-soft);color:inherit;text-decoration:line-through;
-    text-decoration-color:var(--no);box-shadow:inset 2px 0 0 var(--no);padding:0 2px}
-  .bub.agent{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:3px}
-  .status-pill{align-self:center;font-family:var(--ui);font-size:10.5px;letter-spacing:.08em;
-    padding:6px 12px;border-radius:999px;animation:pop .4s ease;text-align:center}
-  .status-pill.rej{background:var(--no-soft);color:var(--no);border:1px solid var(--no)}
-  .status-pill.acc{background:#EAF5EE;color:var(--ok);border:1px solid var(--ok)}
-  .status-pill.neg{background:var(--accent-soft);color:var(--accent-deep);border:1px solid var(--accent)}
-
-  .dbrain{padding:16px;background:var(--dark);font-family:var(--ui);font-size:11.5px;
-    line-height:1.7;overflow-y:auto;max-height:452px}
-  .dbrain .who-l{color:var(--dark-mut)}
-  .dstep{display:flex;gap:9px;align-items:baseline;padding:5px 0;opacity:0;transform:translateY(5px);
-    transition:all .3s;color:var(--dark-mut)}
-  .dstep.on{opacity:1;transform:none}
-  .dstep .tag{flex-shrink:0;font-size:9.5px;letter-spacing:.08em;padding:2px 7px;border-radius:3px;font-weight:500}
-  .tag.t-in{background:var(--dark-line);color:#EDE8E2}
-  .tag.t-rt{background:var(--dark-line);color:#9FD89B}
-  .tag.t-an{background:var(--accent);color:#fff}
-  .tag.t-gp{background:var(--no);color:#fff}
-  .tag.t-sv{background:#9FD89B;color:#151210}
-  .dmeta{margin-top:10px;padding-top:10px;border-top:1px dashed var(--dark-line);
-    color:var(--accent);font-size:11px}
-  .demo-chips{display:flex;gap:7px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--line)}
-  .chip{font-family:var(--ui);font-size:11.5px;padding:8px 13px;border-radius:999px;cursor:pointer;
-    border:1px solid var(--line);background:var(--paper);color:var(--ink);transition:all .15s}
-  .chip:hover{border-color:var(--accent);color:var(--accent-deep)}
-  .chip.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-
-  /* ---- metrics ---- */
-  .metrics{border-bottom:1px solid var(--line)}
-  .metrics-grid{display:grid;grid-template-columns:repeat(4,1fr)}
-  .metric{padding:30px 26px 30px 26px;border-left:1px solid var(--line)}
-  .metric:first-child{border-left:none;padding-left:0}
-  .metric b{display:block;font-family:var(--tight);font-size:34px;font-weight:700;letter-spacing:-.02em}
-  .metric span{font-family:var(--ui);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-  .metrics-note{font-family:var(--ui);font-size:11px;color:var(--muted);padding-bottom:26px}
-
-  /* ---- card grids ---- */
-  .grid4,.grid3{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);margin-top:44px}
-  .grid4{grid-template-columns:repeat(4,1fr)}
-  .grid3{grid-template-columns:repeat(3,1fr)}
-  .card{background:var(--paper);padding:26px 24px;transition:background .2s}
-  .card.hov:hover{background:var(--accent-soft)}
-  .card .x{font-family:var(--ui);color:var(--no);font-size:13px}
-  .card .ic{font-family:var(--ui);font-size:11px;color:var(--accent-deep);letter-spacing:.08em}
-  .card h3{font-size:15.5px;margin:8px 0 6px;font-weight:600}
-  .card p{font-size:13px;color:var(--muted)}
-  .card code{display:block;font-family:var(--ui);font-size:10.5px;color:var(--muted);
-    margin-top:12px;padding-top:10px;border-top:1px solid var(--line);word-break:break-all}
-
-  /* ---- before / after ---- */
-  .ba-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--ink);
-    border:1px solid var(--ink);margin-top:44px}
-  .ba{background:var(--paper);padding:32px 30px}
-  .ba.after{background:var(--accent-soft)}
-  .ba h3{font-family:var(--ui);font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:20px}
-  .ba.after h3{color:var(--accent-deep)}
-  .ba-row{padding:13px 0;border-top:1px solid var(--line)}
-  .ba-row h4{font-size:14px;font-weight:600}
-  .ba-row p{font-size:13px;color:var(--muted);margin-top:3px}
-  .ba-row .t{font-family:var(--ui);font-size:11.5px;color:var(--accent-deep);font-weight:500;
-    margin-top:5px;display:block}
-
-  /* ---- measured band ---- */
-  .measured{background:var(--dark);color:#EDE8E2;padding:92px 0;border-bottom:1px solid var(--dark-line)}
-  .measured .eyebrow{color:var(--accent)}
-  .measured h2{color:#fff}
-  .measured .sec-body{color:var(--dark-mut)}
-  .measured .sec-body b{color:#fff}
-  .m-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:56px;margin-top:48px;align-items:start}
-  .bgroup{margin-bottom:26px}
-  .bgroup .bl{display:flex;justify-content:space-between;gap:12px;font-family:var(--ui);
-    font-size:11px;color:var(--dark-mut);margin-bottom:9px}
-  .bgroup .bl b{color:#fff;font-weight:500}
-  .track{height:10px;background:var(--dark-2);position:relative;margin-bottom:7px}
-  .fillb{position:absolute;top:0;bottom:0;left:0;width:0;transition:width 1.2s cubic-bezier(.2,.7,.2,1)}
-  .fillb.us{background:var(--accent)}
-  .fillb.old{background:#4A423B}
-  .on .fillb{width:var(--w)}
-  .legend{display:flex;gap:22px;font-family:var(--ui);font-size:10.5px;color:var(--dark-mut);margin-top:4px}
-  .legend i{display:inline-block;width:10px;height:10px;margin-right:7px;vertical-align:-1px}
-  .checks{border:1px solid var(--dark-line);border-radius:6px;background:var(--dark-2);overflow:hidden}
-  .check{display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid var(--dark-line);
-    font-family:var(--ui);font-size:12px;color:var(--dark-mut)}
-  .check:last-child{border-bottom:none}
-  .check .ok{color:var(--ok);font-weight:500;flex-shrink:0}
-  .check .val{margin-left:auto;text-align:right}.check .val b{color:var(--accent);font-weight:500}
+  /* ---- the finding: dark payoff band ---- */
+  .finding{background:var(--dark);color:#EDE8E2;padding:88px 0;border-bottom:1px solid var(--dark-line)}
+  .finding .eyebrow{color:var(--accent)}
+  .finding h2{color:#fff;font-size:33px;max-width:700px}
+  .finding p.lede-s{color:var(--dark-mut);max-width:640px;margin-top:16px;font-size:16px}
+  .finding p.lede-s em{color:#fff;font-style:normal}
+  .f-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:52px;margin-top:44px;align-items:start}
+  .f-grid pre{font-family:var(--ui);font-size:11.5px;line-height:1.75;background:var(--dark-2);
+    border:1px solid var(--dark-line);border-left:2px solid var(--accent);border-radius:4px;
+    padding:18px 20px;overflow-x:auto;color:var(--dark-mut)}
+  .f-grid pre b{color:#fff;font-weight:400}
+  .out{border:1px solid var(--dark-line);border-radius:4px;background:var(--dark-2);overflow:hidden}
+  .out-h{display:grid;grid-template-columns:1fr 62px 78px;gap:10px;padding:11px 16px;
+    border-bottom:1px solid var(--dark-line);font-family:var(--ui);font-size:10px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--dark-mut)}
+  .out-r{display:grid;grid-template-columns:1fr 62px 78px;gap:10px;padding:11px 16px;
+    border-bottom:1px solid var(--dark-line);font-family:var(--ui);font-size:12px;color:#EDE8E2}
+  .out-r:last-child{border-bottom:none}
+  .out-r span:not(:first-child){text-align:right;color:var(--accent)}
+  .out-note{font-family:var(--ui);font-size:11px;color:var(--dark-mut);margin-top:14px}
 
   /* ---- FAQ ---- */
-  .faq-list{max-width:780px;margin:44px auto 0}
-  .faq-item{border:1px solid var(--line);border-radius:6px;margin-bottom:12px;
-    background:var(--paper);overflow:hidden}
+  .faq{max-width:800px;margin:34px 0 0}
+  .faq-item{border-bottom:1px solid var(--line)}
   .faq-q{width:100%;text-align:left;background:none;border:none;font-family:var(--tight);
-    font-size:16px;font-weight:600;padding:19px 22px;cursor:pointer;display:flex;
-    justify-content:space-between;align-items:center;gap:16px}
-  .faq-icon{width:24px;height:24px;border-radius:50%;background:var(--accent-soft);
-    color:var(--accent-deep);display:flex;align-items:center;justify-content:center;font-weight:600;
-    transition:transform .3s,background .3s;flex-shrink:0;font-family:var(--ui)}
-  .faq-item.open .faq-icon{transform:rotate(45deg);background:var(--accent);color:#fff}
+    font-size:16.5px;font-weight:600;padding:20px 0;cursor:pointer;display:flex;
+    justify-content:space-between;align-items:center;gap:16px;color:var(--ink)}
+  .faq-icon{font-family:var(--ui);color:var(--accent);transition:transform .3s;flex-shrink:0}
+  .faq-item.open .faq-icon{transform:rotate(45deg)}
   .faq-a{max-height:0;overflow:hidden;transition:max-height .4s ease}
-  .faq-a p{padding:0 22px 20px;font-size:14px;color:var(--muted)}
+  .faq-a p{padding:0 0 20px;font-size:14px;color:var(--muted);max-width:70ch}
   .faq-a code{font-family:var(--ui);font-size:12.5px;color:var(--accent-deep)}
 
-  /* ---- CTA + footer ---- */
-  .cta{padding:100px 0;border-bottom:1px solid var(--line)}
-  .cta h2{font-size:42px}
-  .cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:32px}
-  footer{background:var(--dark);color:var(--dark-mut);padding:60px 0;font-size:13px}
-  .foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:52px}
+  /* ---- sign-off ---- */
+  .signoff{padding:96px 0;border-bottom:1px solid var(--line)}
+  .signoff h2{font-size:40px;max-width:640px}
+  .signoff .row-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
+  .sig{margin-top:52px;padding-top:22px;border-top:1px solid var(--ink);display:flex;
+    justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--ui);
+    font-size:11px;color:var(--muted)}
+
+  footer{background:var(--dark);color:var(--dark-mut);padding:56px 0;font-size:13px}
+  .foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:48px}
   .foot-grid h4{font-family:var(--ui);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
-    color:#fff;margin-bottom:16px;font-weight:500}
+    color:#fff;margin-bottom:15px;font-weight:500}
   .foot-grid a{display:block;color:var(--dark-mut);text-decoration:none;padding:4px 0}
   .foot-grid a:hover{color:#fff}
   .foot-mark{display:flex;align-items:center;gap:10px;color:#fff;font-family:var(--tight);
-    font-weight:700;font-size:16px;margin-bottom:14px}
-  .foot-bottom{margin-top:48px;padding-top:22px;border-top:1px solid var(--dark-line);
+    font-weight:700;font-size:16px;margin-bottom:13px}
+  .foot-bottom{margin-top:44px;padding-top:20px;border-top:1px solid var(--dark-line);
     font-family:var(--ui);font-size:11px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 
   #toTop{position:fixed;bottom:26px;right:26px;width:44px;height:44px;border-radius:50%;
@@ -203,42 +204,41 @@
   #toTop.show{opacity:1;visibility:visible;transform:none}
   #toTop:hover{background:var(--accent);color:#fff}
 
-  /* ---- motion ---- */
   @media (prefers-reduced-motion:no-preference){
     .rv{opacity:0;transform:translateY(14px);
       transition:opacity .55s ease,transform .55s cubic-bezier(.2,.8,.3,1)}
     .rv.on{opacity:1;transform:none}
-    .stagger.on>*{animation:rise .5s cubic-bezier(.2,.8,.3,1) backwards}
-    .stagger.on>*:nth-child(2){animation-delay:.07s}
-    .stagger.on>*:nth-child(3){animation-delay:.14s}
-    .stagger.on>*:nth-child(4){animation-delay:.21s}
-    .stagger.on>*:nth-child(5){animation-delay:.28s}
-    .stagger.on>*:nth-child(6){animation-delay:.35s}
-    @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
     .btn{transition:transform .15s ease,background .18s,border-color .18s}
     .btn:active{transform:translateY(1px)}
   }
   @media (prefers-reduced-motion:reduce){
     *{animation:none!important;transition:none!important}
-    .pulse-dot{display:none}.fillb{width:var(--w)}
+    .pulse-dot{display:none}
+    .doc-body s{background-size:100% 1.5px}
+    .verdict-chip{opacity:1}
   }
 
-  @media (max-width:960px){
-    h1{font-size:36px} h2{font-size:27px} .cta h2{font-size:30px}
-    .hero-grid,.m-grid{grid-template-columns:1fr;gap:44px}
-    .num-grid{grid-template-columns:1fr;gap:18px}.sec-num::after{display:none}
-    .metrics-grid,.grid4,.grid3{grid-template-columns:1fr 1fr}
-    .metric{border-left:none;border-top:1px solid var(--line);padding-left:0}
-    .ba-grid,.foot-grid{grid-template-columns:1fr}
-    .demo-grid{grid-template-columns:1fr}
-    .dchat{border-right:none;border-bottom:1px solid var(--line)}
+  @media (max-width:1080px){
+    .clause-in{grid-template-columns:88px minmax(0,1fr)}
+    .note{grid-column:2;position:static;margin-top:26px;max-width:520px}
+    .cl-no{position:static}
+  }
+  @media (max-width:900px){
+    h1{font-size:36px} .cl-body h2{font-size:26px} .signoff h2{font-size:30px}
+    .finding h2{font-size:26px}
+    .hero-in,.f-grid{grid-template-columns:1fr;gap:40px}
+    .clause-in{grid-template-columns:1fr;gap:20px}
+    .cl-no::after{display:none}
+    .ledger-in{grid-template-columns:1fr 1fr}
+    .row{grid-template-columns:1fr;gap:8px}
+    .grew,.foot-grid{grid-template-columns:1fr}
     .nav-links a:not(.btn){display:none}
   }
 </style>
 </head>
 <body>
 
-<div id="prog"></div>
+<div id="pen"><i></i><b></b></div>
 
 <nav id="nav"><div class="nav-in">
   <a class="wordmark" href="/">
@@ -246,379 +246,302 @@
     Freelance Guardian
   </a>
   <div class="nav-links">
-    <a href="#how">How it works</a>
-    <a href="#memory">Memory</a>
-    <a href="#measured">Measured</a>
-    <a href="#faq">FAQ</a>
+    <a href="#reads">What it reads</a>
+    <a href="#does">What it does</a>
+    <a href="#notices">What it notices</a>
+    <a href="#remembers">What it remembers</a>
     <button id="theme" type="button">Dark</button>
     <a href="/app" class="btn btn-p btn-sm">Open the agent</a>
   </div>
 </div></nav>
 
-<!-- ═════════ HERO ═════════ -->
-<header class="hero"><div class="wrap hero-grid">
+<!-- ═════════ HERO — the document marks itself up ═════════ -->
+<header class="hero"><div class="sheet hero-in">
   <div>
     <div class="eyebrow">Agentic memory for contract negotiation</div>
     <h1>Your last bad contract<br>should be your <em>last.</em></h1>
-    <p class="lede">Freelancers sign bad contracts because they have no memory. The
-      unlimited-revisions clause that cost you forty unpaid hours in March is invisible in
+    <p class="lede">You already know what a bad clause looks like. You just won't remember in
       June. Freelance Guardian reads every contract against <b>your standing rules</b> and
-      <b>every clause that has burned you</b> — then drafts the counter-offer.</p>
+      <b>every clause that has burned you</b> — then marks it up and drafts the reply.</p>
     <div class="hero-cta">
       <a href="/app" class="btn btn-p">Review a contract</a>
-      <a href="#how" class="btn btn-g">See the pipeline ↓</a>
+      <a href="#reads" class="btn btn-g">How the memory works ↓</a>
     </div>
     <div class="hero-note">
       <span><b>No</b> API key needed</span><span><b>Free</b> tier throughout</span><span>Memory in <b>CockroachDB</b></span>
     </div>
   </div>
 
-  <div class="demo-win rv">
-    <div class="demo-bar">
-      <span class="ctx"><span class="dot"></span> agent · apex-dynamics-llc</span>
-      <span class="ctx">try a contract ↓</span>
+  <div class="doc rv">
+    <div class="doc-head">
+      <span id="dh-name">apex-dynamics-llc · independent contractor agreement</span>
+      <span class="verdict-chip" id="chip"></span>
     </div>
-    <div class="demo-grid">
-      <div class="dchat" id="dchat"><div class="who-l">contract ↔ verdict</div></div>
-      <div class="dbrain" id="dbrain">
-        <div class="who-l">langgraph · reasoning trace</div>
-        <div id="dsteps"></div>
-        <div class="dmeta" id="dmeta" style="display:none"></div>
-      </div>
-    </div>
-    <div class="demo-chips">
-      <button class="chip active" data-s="risky">A contract full of traps</button>
-      <button class="chip" data-s="clean">A fair contract</button>
-      <button class="chip" data-s="gaps">A polished template</button>
+    <div class="doc-body" id="dbody"></div>
+    <div class="doc-foot" id="dfoot"></div>
+    <div class="doc-tabs">
+      <button class="dtab active" data-s="risky">A contract full of traps</button>
+      <button class="dtab" data-s="clean">A fair contract</button>
+      <button class="dtab" data-s="gaps">A polished template</button>
     </div>
   </div>
 </div></header>
 
-<!-- ═════════ LIVE METRICS ═════════ -->
-<section class="metrics"><div class="wrap">
-  <div class="metrics-grid rv stagger" id="stats">
-    <div class="metric"><b data-k="rules">–</b><span>rules remembered</span></div>
-    <div class="metric"><b data-k="risks">–</b><span>past risks recorded</span></div>
-    <div class="metric"><b data-k="reviews">–</b><span>contracts reviewed</span></div>
-    <div class="metric"><b data-k="clients">–</b><span>clients tracked</span></div>
+<!-- ═════════ LEDGER ═════════ -->
+<section class="ledger"><div class="sheet">
+  <div class="ledger-in rv" id="stats">
+    <div class="lg"><b data-k="rules">–</b><span>rules remembered</span></div>
+    <div class="lg"><b data-k="risks">–</b><span>past risks recorded</span></div>
+    <div class="lg"><b data-k="reviews">–</b><span>contracts reviewed</span></div>
+    <div class="lg"><b data-k="clients">–</b><span>clients tracked</span></div>
   </div>
-  <p class="metrics-note" id="statsnote">Read live from CockroachDB when this page loaded.</p>
+  <p class="ledger-note" id="statsnote">Read live from CockroachDB when this page loaded.</p>
 </div></section>
 
-<!-- ═════════ PROBLEM ═════════ -->
-<section class="step-sec"><div class="wrap">
-  <div class="eyebrow">The problem</div>
-  <h2 class="rv">You already know what a bad clause looks like. You just won't remember in June.</h2>
-  <div class="grid4 rv stagger">
-    <div class="card"><span class="x">✕</span><h3>Lessons don't persist</h3>
-      <p>The clause that cost you forty unpaid hours is a memory, not a system. Six months later it works again.</p></div>
-    <div class="card"><span class="x">✕</span><h3>Every client starts from zero</h3>
-      <p>What you conceded to a client last quarter isn't in the room when they send the next agreement.</p></div>
-    <div class="card"><span class="x">✕</span><h3>Absence is invisible</h3>
-      <p>The dangerous contracts aren't the ones with bad clauses. They're the ones missing your protections entirely.</p></div>
-    <div class="card"><span class="x">✕</span><h3>No pattern across clients</h3>
-      <p>One clause failing you across five clients isn't a client problem. Nothing you own would ever show you that.</p></div>
+<!-- ═════════ CLAUSE 1 — WHAT IT READS ═════════ -->
+<section class="clause" id="reads"><div class="sheet clause-in">
+  <div class="cl-no">01</div>
+  <div class="cl-body">
+    <h2>Memory isn't one thing. This agent keeps three.</h2>
+    <p class="lede-s">Each is read at a different moment, written by different code, and lives for
+      a different length of time. <b>Collapsing them into one vector store</b> is what makes agents
+      feel amnesiac despite "having RAG".</p>
+
+    <div class="rows rv">
+      <div class="row"><div class="k">Semantic</div>
+        <div><h3>What I believe</h3>
+          <p>Your standing terms, and the clause patterns that have harmed you before. Searched
+            once per clause, over a distributed vector index.</p>
+          <code>AsyncCockroachDBVectorStore → guardian_memory</code></div></div>
+      <div class="row"><div class="k">Episodic</div>
+        <div><h3>What happened with this client</h3>
+          <p>One durable thread per client. Reopening it months later replays the whole
+            negotiation, so nothing you already conceded gets re-demanded.</p>
+          <code>CockroachDBChatMessageHistory → guardian_chat_history</code></div></div>
+      <div class="row"><div class="k">Procedural</div>
+        <div><h3>Where the work got to</h3>
+          <p>Workflow state written after every step. Kill it mid-review and the next run picks
+            up from the last completed node.</p>
+          <code>AsyncCockroachDBSaver → checkpoints</code></div></div>
+    </div>
   </div>
+  <aside class="note rv"><em>Margin note</em>
+    Three memories, one cluster. A judge can open it and read every one.</aside>
 </div></section>
 
-<!-- ═════════ 01 · PIPELINE ═════════ -->
-<section class="step-sec" id="how"><div class="wrap num-grid">
-  <div class="sec-num">01</div>
-  <div>
-    <h2 class="rv">One pipeline from contract to counter-offer.</h2>
-    <p class="sec-body rv">Every review runs the same four nodes, and <b>every step is checkpointed
-      to CockroachDB</b>. Kill the process mid-review and the next run resumes from the last
-      completed node instead of starting over.</p>
+<!-- ═════════ CLAUSE 2 — WHAT IT DOES ═════════ -->
+<section class="clause" id="does"><div class="sheet clause-in">
+  <div class="cl-no">02</div>
+  <div class="cl-body">
+    <h2>Four steps, and every one of them written down.</h2>
+    <p class="lede-s">The same nodes run on every contract, and <b>each boundary is a checkpoint</b>
+      persisted to CockroachDB. Nothing about the run is held only in memory.</p>
 
     <div class="fig rv">
-      <svg viewBox="0 0 1040 200" aria-label="The four-node review pipeline">
+      <svg viewBox="0 0 1000 190" aria-label="The four-node review pipeline">
         <defs><marker id="mA" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
           <path d="M0,0L8,4L0,8" fill="none" stroke="#6D665E" stroke-width="1.2"/></marker></defs>
-        <rect class="box" x="0" y="72" width="170" height="56" rx="3"/>
-        <text class="m" x="14" y="94" fill="#C64F0E">N1</text><text class="m2" x="14" y="112">ingest_contract</text>
-        <rect class="box" x="205" y="72" width="170" height="56" rx="3"/>
-        <text class="m" x="219" y="94" fill="#C64F0E">N2</text><text class="m2" x="219" y="112">retrieve_memory</text>
-        <rect class="box" x="410" y="72" width="170" height="56" rx="3"/>
-        <text class="m" x="424" y="94" fill="#C64F0E">N3</text><text class="m2" x="424" y="112">analyze_contract</text>
-        <rect class="box" x="615" y="72" width="170" height="56" rx="3"/>
-        <text class="m" x="629" y="94" fill="#C64F0E">N4</text><text class="m2" x="629" y="112">save_state</text>
-        <rect x="855" y="20" width="185" height="52" rx="3" fill="#FDEEE5" stroke="#F26522"/>
-        <text class="m2" x="871" y="42" fill="#C64F0E">Counter-offer</text><text class="m" x="871" y="58">redlined · send-ready</text>
-        <rect class="box" x="855" y="128" width="185" height="52" rx="3"/>
-        <text class="m2" x="871" y="150">agent_audit_log</text><text class="m" x="871" y="166">append-only · queryable</text>
+        <rect class="box" x="0" y="66" width="165" height="56" rx="3"/>
+        <text class="m" x="14" y="88" fill="#C64F0E">N1</text><text class="m2" x="14" y="106">ingest_contract</text>
+        <rect class="box" x="198" y="66" width="165" height="56" rx="3"/>
+        <text class="m" x="212" y="88" fill="#C64F0E">N2</text><text class="m2" x="212" y="106">retrieve_memory</text>
+        <rect class="box" x="396" y="66" width="165" height="56" rx="3"/>
+        <text class="m" x="410" y="88" fill="#C64F0E">N3</text><text class="m2" x="410" y="106">analyze_contract</text>
+        <rect class="box" x="594" y="66" width="165" height="56" rx="3"/>
+        <text class="m" x="608" y="88" fill="#C64F0E">N4</text><text class="m2" x="608" y="106">save_state</text>
+        <rect x="820" y="16" width="180" height="50" rx="3" fill="#FDEEE5" stroke="#F26522"/>
+        <text class="m2" x="836" y="38" fill="#C64F0E">Counter-offer</text><text class="m" x="836" y="54">redlined · send-ready</text>
+        <rect class="box" x="820" y="122" width="180" height="50" rx="3"/>
+        <text class="m2" x="836" y="144">agent_audit_log</text><text class="m" x="836" y="160">append-only · queryable</text>
         <g stroke="#6D665E" stroke-width="1.3" fill="none">
-          <line class="flowline" x1="170" y1="100" x2="199" y2="100" marker-end="url(#mA)"/>
-          <line class="flowline" x1="375" y1="100" x2="404" y2="100" marker-end="url(#mA)"/>
-          <line class="flowline" x1="580" y1="100" x2="609" y2="100" marker-end="url(#mA)"/>
-          <path class="flowline" d="M785,88 C820,80 820,52 851,48" marker-end="url(#mA)"/>
-          <path class="flowline" d="M785,112 C820,120 820,148 851,152" marker-end="url(#mA)"/>
+          <line class="flowline" x1="165" y1="94" x2="192" y2="94" marker-end="url(#mA)"/>
+          <line class="flowline" x1="363" y1="94" x2="390" y2="94" marker-end="url(#mA)"/>
+          <line class="flowline" x1="561" y1="94" x2="588" y2="94" marker-end="url(#mA)"/>
+          <path class="flowline" d="M759,82 C790,74 790,46 816,42" marker-end="url(#mA)"/>
+          <path class="flowline" d="M759,106 C790,114 790,142 816,146" marker-end="url(#mA)"/>
         </g>
         <circle class="pulse-dot" r="3.4"><animateMotion dur="6s" repeatCount="indefinite"
-          path="M0,100 L785,100 C820,92 820,52 855,46"/></circle>
-        <text class="m" x="392" y="52">checkpoint written after every node</text>
+          path="M0,94 L759,94 C790,86 790,46 820,40"/></circle>
+        <text class="m" x="330" y="42">checkpoint written after every node</text>
       </svg>
-      <div class="figcap"><b>Fig. A</b> — the review pipeline. Each arrow is a checkpoint boundary written to CockroachDB.</div>
-    </div>
-
-    <div class="grid4 rv stagger" style="margin-top:36px">
-      <div class="card"><span class="ic">N1</span><h3>Ingest</h3>
-        <p>Archives the original to S3, then splits it into clauses.</p><code>s3://…/contracts/</code></div>
-      <div class="card"><span class="ic">N2</span><h3>Retrieve</h3>
-        <p>One vector query per clause across both memories, plus this client's thread.</p><code>guardian_memory</code></div>
-      <div class="card"><span class="ic">N3</span><h3>Analyse</h3>
-        <p>Scores risk 0–100, finds bad clauses and missing protections, drafts the reply.</p><code>deterministic · or an LLM</code></div>
-      <div class="card"><span class="ic">N4</span><h3>Save</h3>
-        <p>Writes the decision to an append-only log and the client's thread.</p><code>agent_audit_log</code></div>
+      <div class="figcap"><b>Fig. 1</b> — each arrow is a checkpoint boundary.</div>
     </div>
   </div>
+  <aside class="note rv"><em>Margin note</em>
+    Retrieval runs once per clause. One query for a whole contract averages every
+    clause together and the specific hits wash out.</aside>
 </div></section>
 
-<!-- ═════════ 02 · MEMORY ═════════ -->
-<section class="step-sec" id="memory"><div class="wrap num-grid">
-  <div class="sec-num">02</div>
-  <div>
-    <h2 class="rv">Agentic memory is not one thing. We store it as three.</h2>
-    <p class="sec-body rv">Each is read at a different moment, written by different code, and lives
-      for a different length of time. <b>Collapsing them into one vector store</b> is what makes
-      agents feel amnesiac despite "having RAG".</p>
-
-    <div class="grid3 rv stagger">
-      <div class="card hov"><span class="ic">SEMANTIC</span><h3>What I believe</h3>
-        <p>Your standing terms and the clause patterns that have harmed you, vector-searched
-          per clause over a C-SPANN index.</p>
-        <code>AsyncCockroachDBVectorStore</code></div>
-      <div class="card hov"><span class="ic">EPISODIC</span><h3>What happened with this client</h3>
-        <p>One durable thread per client. Reopening it months later replays the whole
-          negotiation, so nothing already conceded is re-demanded.</p>
-        <code>CockroachDBChatMessageHistory</code></div>
-      <div class="card hov"><span class="ic">PROCEDURAL</span><h3>Where the work got to</h3>
-        <p>Workflow state checkpointed after every node. Kill it mid-review and the next run
-          resumes rather than restarting.</p>
-        <code>AsyncCockroachDBSaver</code></div>
-    </div>
+<!-- ═════════ CLAUSE 3 — WHAT IT NOTICES ═════════ -->
+<section class="clause" id="notices"><div class="sheet clause-in">
+  <div class="cl-no">03</div>
+  <div class="cl-body">
+    <h2>The dangerous contract is the one that looks fine.</h2>
+    <p class="lede-s">Pattern matching finds bad clauses that are <em>present</em>. It cannot see a
+      protection that was simply never written — which is exactly how a polished, well-drafted
+      template still leaves you exposed. <b>So the whole rule set is checked against the
+      document</b>, and what nobody wrote down gets raised too.</p>
 
     <div class="fig rv">
-      <svg viewBox="0 0 1040 210" aria-label="How the three memories are read and written">
-        <defs><marker id="mM" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
-          <path d="M0,0L8,4L0,8" fill="none" stroke="#6D665E" stroke-width="1.2"/></marker></defs>
-        <rect class="box" x="0" y="78" width="150" height="54" rx="3"/>
-        <text class="m2" x="14" y="100">Contract in</text><text class="m" x="14" y="118">split into clauses</text>
-        <rect x="300" y="14" width="230" height="50" rx="3" fill="#FDEEE5" stroke="#F26522"/>
-        <text class="m2" x="316" y="36" fill="#C64F0E">guardian_memory</text><text class="m" x="316" y="52">semantic · VECTOR(1536)</text>
-        <rect class="box" x="300" y="80" width="230" height="50" rx="3"/>
-        <text class="m2" x="316" y="102">guardian_chat_history</text><text class="m" x="316" y="118">episodic · per client</text>
-        <rect class="box" x="300" y="146" width="230" height="50" rx="3"/>
-        <text class="m2" x="316" y="168">checkpoints</text><text class="m" x="316" y="184">procedural · per node</text>
-        <rect class="box" x="640" y="80" width="180" height="50" rx="3"/>
-        <text class="m2" x="654" y="102">Decision</text><text class="m" x="654" y="118">score · findings · reply</text>
-        <rect x="880" y="80" width="160" height="50" rx="3" fill="#FDEEE5" stroke="#F26522"/>
-        <text class="m2" x="894" y="102" fill="#C64F0E">agent_audit_log</text><text class="m" x="894" y="118">one row per review</text>
-        <g stroke="#6D665E" stroke-width="1.3" fill="none">
-          <path class="flowline" d="M150,96 C220,90 240,42 296,40" marker-end="url(#mM)"/>
-          <path class="flowline" d="M150,105 L296,105" marker-end="url(#mM)"/>
-          <path class="flowline" d="M150,114 C220,120 240,168 296,170" marker-end="url(#mM)"/>
-          <path class="flowline" d="M530,40 C580,44 590,90 636,98" marker-end="url(#mM)"/>
-          <path class="flowline" d="M530,105 L636,105" marker-end="url(#mM)"/>
-          <path class="flowline" d="M530,170 C580,166 590,120 636,112" marker-end="url(#mM)"/>
-          <line class="flowline" x1="820" y1="105" x2="874" y2="105" marker-end="url(#mM)"/>
-        </g>
-        <circle class="pulse-dot" r="3.2"><animateMotion dur="4s" repeatCount="indefinite" path="M150,105 L296,105"/></circle>
-        <circle class="pulse-dot" r="3.2"><animateMotion dur="4s" begin="1.3s" repeatCount="indefinite" path="M530,105 L636,105"/></circle>
-        <circle class="pulse-dot" r="3.2"><animateMotion dur="4s" begin="2.6s" repeatCount="indefinite" path="M820,105 L874,105"/></circle>
-      </svg>
-      <div class="figcap"><b>Fig. B</b> — three memories read in parallel, one decision out, one audit row written. All inside a single CockroachDB cluster.</div>
-    </div>
-  </div>
-</div></section>
-
-<!-- ═════════ 03 · GAPS ═════════ -->
-<section class="step-sec"><div class="wrap num-grid">
-  <div class="sec-num">03</div>
-  <div>
-    <h2 class="rv">The dangerous contract is the one that looks fine.</h2>
-    <p class="sec-body rv">Pattern matching finds bad clauses that are <em>present</em>. It is blind to
-      protections that are simply missing — which is how a polished, well-drafted template still
-      leaves you exposed. <b>So the agent checks your whole rule set against the document</b> and
-      reports what nobody wrote down.</p>
-
-    <div class="fig rv">
-      <svg viewBox="0 0 1040 230" aria-label="How a missing protection is detected">
+      <svg viewBox="0 0 1000 220" aria-label="How a missing protection is detected">
         <defs><marker id="mC" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
           <path d="M0,0L8,4L0,8" fill="none" stroke="#6D665E" stroke-width="1.2"/></marker></defs>
-        <rect class="box" x="0" y="86" width="180" height="56" rx="3"/>
-        <text class="m2" x="14" y="108">Every standing rule</text><text class="m" x="14" y="126">not just the recalled ones</text>
-        <rect class="box" x="250" y="86" width="210" height="56" rx="3"/>
-        <text class="m" x="264" y="106" fill="#C64F0E">CHECK</text><text class="m2" x="264" y="124">does the contract mention it?</text>
-        <rect x="550" y="20" width="210" height="52" rx="3" fill="#FDEEE5" stroke="#F26522"/>
-        <text class="m2" x="566" y="42" fill="#C64F0E">Clause present</text><text class="m" x="566" y="58">judge it on its terms</text>
-        <rect x="550" y="156" width="210" height="52" rx="3" fill="#FBEAE6" stroke="#C64530"/>
-        <text class="m2" x="566" y="178" fill="#C64530">Nothing written</text><text class="m" x="566" y="194">raise a gap finding</text>
-        <rect class="box" x="840" y="86" width="200" height="56" rx="3"/>
-        <text class="m2" x="854" y="108">Counter-offer</text><text class="m" x="854" y="126">asks for what is missing</text>
+        <rect class="box" x="0" y="82" width="176" height="56" rx="3"/>
+        <text class="m2" x="14" y="104">Every standing rule</text><text class="m" x="14" y="122">not just the recalled ones</text>
+        <rect class="box" x="240" y="82" width="205" height="56" rx="3"/>
+        <text class="m" x="254" y="102" fill="#C64F0E">CHECK</text><text class="m2" x="254" y="120">is it mentioned at all?</text>
+        <rect x="530" y="18" width="200" height="50" rx="3" fill="#FDEEE5" stroke="#F26522"/>
+        <text class="m2" x="546" y="40" fill="#C64F0E">Clause present</text><text class="m" x="546" y="56">judge it on its terms</text>
+        <rect x="530" y="150" width="200" height="50" rx="3" fill="#FBEAE6" stroke="#C64530"/>
+        <text class="m2" x="546" y="172" fill="#C64530">Nothing written</text><text class="m" x="546" y="188">raise a gap finding</text>
+        <rect class="box" x="810" y="82" width="190" height="56" rx="3"/>
+        <text class="m2" x="824" y="104">Counter-offer</text><text class="m" x="824" y="122">asks for what is missing</text>
         <g stroke="#6D665E" stroke-width="1.3" fill="none">
-          <line class="flowline" x1="180" y1="114" x2="244" y2="114" marker-end="url(#mC)"/>
-          <path class="flowline" d="M460,102 C500,94 510,52 546,48" marker-end="url(#mC)"/>
-          <path class="flowline" d="M460,126 C500,134 510,178 546,182" marker-end="url(#mC)"/>
-          <path class="flowline" d="M760,48 C810,52 810,98 836,108" marker-end="url(#mC)"/>
-          <path class="flowline" d="M760,182 C810,178 810,130 836,120" marker-end="url(#mC)"/>
+          <line class="flowline" x1="176" y1="110" x2="234" y2="110" marker-end="url(#mC)"/>
+          <path class="flowline" d="M445,98 C486,90 496,48 526,44" marker-end="url(#mC)"/>
+          <path class="flowline" d="M445,122 C486,130 496,172 526,176" marker-end="url(#mC)"/>
+          <path class="flowline" d="M730,44 C778,48 778,94 806,104" marker-end="url(#mC)"/>
+          <path class="flowline" d="M730,176 C778,172 778,126 806,116" marker-end="url(#mC)"/>
         </g>
-        <text class="m" x="492" y="40" fill="#3E9B62">yes</text>
-        <text class="m" x="486" y="206" fill="#C64530">silent</text>
+        <text class="m" x="470" y="36" fill="#3E9B62">yes</text>
+        <text class="m" x="464" y="200" fill="#C64530">silent</text>
         <circle class="pulse-dot" r="3.4"><animateMotion dur="5s" repeatCount="indefinite"
-          path="M0,114 L460,126 C500,134 510,178 550,182 L760,182 C810,178 810,130 840,118"/></circle>
+          path="M0,110 L445,122 C486,130 496,172 530,176 L730,176 C778,172 778,126 810,114"/></circle>
       </svg>
-      <div class="figcap"><b>Fig. C</b> — vector search returns rules resembling the contract's contents, so a missing protection can never be retrieved that way. The full rule set is checked instead.</div>
+      <div class="figcap"><b>Fig. 2</b> — vector search returns rules that resemble what the contract
+        <em>says</em>, so a missing protection can never surface that way.</div>
     </div>
   </div>
+  <aside class="note rv"><em>Margin note</em>
+    A template still full of <span style="white-space:nowrap">[7/15/30]</span> blanks
+    cannot be "accepted as written". It isn't written yet.</aside>
 </div></section>
 
-<!-- ═════════ BEFORE / AFTER ═════════ -->
-<section class="step-sec"><div class="wrap">
-  <div class="eyebrow">The shift</div>
-  <h2 class="rv">Before and after the memory.</h2>
-  <div class="ba-grid rv">
-    <div class="ba">
-      <h3>Reviewing contracts from memory</h3>
-      <div class="ba-row"><h4>What you catch</h4><p>Whatever you happen to remember on the day.</p>
-        <span class="t">varies by mood and workload</span></div>
-      <div class="ba-row"><h4>Missing protections</h4><p>Invisible. You can only react to what is on the page.</p>
-        <span class="t">silently accepted</span></div>
-      <div class="ba-row"><h4>Client history</h4><p>Whatever you can find by scrolling back through email.</p>
-        <span class="t">re-litigated every time</span></div>
-      <div class="ba-row"><h4>Patterns across clients</h4><p>Nothing aggregates. Every review is an island.</p>
-        <span class="t">never visible</span></div>
+<!-- ═════════ CLAUSE 4 — WHAT IT REMEMBERS ═════════ -->
+<section class="clause" id="remembers"><div class="sheet clause-in">
+  <div class="cl-no">04</div>
+  <div class="cl-body">
+    <h2>The second review starts where the first one ended.</h2>
+    <p class="lede-s">This is the whole claim, and it is checkable. Run the same contract twice for
+      the same client and watch the agent arrive already knowing them. <b>Every number below is
+      asserted by the test suite</b>, not described.</p>
+
+    <div class="grew after rv">
+      <div>
+        <div class="when">First review</div>
+        <dl>
+          <dt>Prior messages on file</dt><dd>0</dd>
+          <dt>Rows in the audit log</dt><dd>1</dd>
+          <dt>Messages on the client thread</dt><dd>2</dd>
+          <dt>Checkpoints for this thread</dt><dd>5</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="when">Second review, same client</div>
+        <dl>
+          <dt>Prior messages on file</dt><dd class="up">2</dd>
+          <dt>Rows in the audit log</dt><dd class="up">2</dd>
+          <dt>Messages on the client thread</dt><dd class="up">4</dd>
+          <dt>Checkpoints for this thread</dt><dd class="up">10</dd>
+        </dl>
+      </div>
     </div>
-    <div class="ba after">
-      <h3>Reviewing with Freelance Guardian</h3>
-      <div class="ba-row"><h4>What you catch</h4><p>Every rule you have ever written down, applied identically.</p>
-        <span class="t">deterministic · reproducible</span></div>
-      <div class="ba-row"><h4>Missing protections</h4><p>Raised explicitly, with the exact term to ask for.</p>
-        <span class="t">flagged as gap findings</span></div>
-      <div class="ba-row"><h4>Client history</h4><p>Loaded automatically from a durable per-client thread.</p>
-        <span class="t">carried across months</span></div>
-      <div class="ba-row"><h4>Patterns across clients</h4><p>One SQL query names the clause failing you most often.</p>
-        <span class="t">queryable over MCP</span></div>
-    </div>
+    <p class="figcap" style="margin-top:14px"><b>Fig. 3</b> — output of
+      <code style="font-family:var(--ui)">scripts/test_graph.py</code> run twice. The test fails if
+      any of these stops growing.</p>
   </div>
+  <aside class="note rv"><em>Margin note</em>
+    Nothing here is a screenshot. Run the script yourself; it asserts every row.</aside>
 </div></section>
 
-<!-- ═════════ MEASURED ═════════ -->
-<section class="measured" id="measured"><div class="wrap">
-  <div class="eyebrow">Measured, not asserted</div>
-  <h2 class="rv">Every number here came from running it.</h2>
-  <p class="sec-body rv">No projections and no illustrative figures. <b>These are outputs</b> — from
-    the query planner, from the test suite, from the live cluster.</p>
+<!-- ═════════ THE FINDING ═════════ -->
+<section class="finding"><div class="sheet">
+  <div class="eyebrow">The finding</div>
+  <h2 class="rv">One clause failing you across five clients isn't a client problem.</h2>
+  <p class="lede-s rv">It's a missing term in <em>your own</em> contract. No single review can reach
+    that conclusion — it exists only because every decision was written somewhere queryable.</p>
 
-  <div class="m-grid">
-    <div class="rv" id="bars">
-      <div class="bgroup">
-        <div class="bl"><b>Memories surfaced per review</b><span>whole-document query → per-clause</span></div>
-        <div class="track"><div class="fillb old" style="--w:44%"></div></div>
-        <div class="track"><div class="fillb us" style="--w:66%"></div></div>
-      </div>
-      <div class="bgroup">
-        <div class="bl"><b>Findings on the sample contract</b><span>clauses only → clauses + gaps</span></div>
-        <div class="track"><div class="fillb old" style="--w:73%"></div></div>
-        <div class="track"><div class="fillb us" style="--w:80%"></div></div>
-      </div>
-      <div class="bgroup">
-        <div class="bl"><b>Score on a silent-but-clean template</b><span>0 → 60</span></div>
-        <div class="track"><div class="fillb old" style="--w:2%"></div></div>
-        <div class="track"><div class="fillb us" style="--w:60%"></div></div>
-      </div>
-      <div class="legend">
-        <span><i style="background:#4A423B"></i>before the fix</span>
-        <span><i style="background:var(--accent)"></i>shipped</span>
-      </div>
-    </div>
-
-    <div class="checks rv">
-      <div class="check"><span class="ok">PASS</span><span>vector index in the query plan</span>
-        <span class="val"><b>vector search</b></span></div>
-      <div class="check"><span class="ok">PASS</span><span>memory persists across runs</span>
-        <span class="val">prior messages <b>0 → 2</b></span></div>
-      <div class="check"><span class="ok">PASS</span><span>artifact round-trips byte-for-byte</span>
-        <span class="val"><b>asserted</b></span></div>
-      <div class="check"><span class="ok">PASS</span><span>every redline span indexes correctly</span>
-        <span class="val"><b>asserted</b></span></div>
-      <div class="check"><span class="ok">PASS</span><span>runs with no API key</span>
-        <span class="val"><b>default</b></span></div>
-      <div class="check"><span class="ok">PASS</span><span>cost to run and demo</span>
-        <span class="val"><b>$0</b></span></div>
-    </div>
-  </div>
-</div></section>
-
-<!-- ═════════ PAYOFF ═════════ -->
-<section class="step-sec"><div class="wrap">
-  <div class="eyebrow">The payoff</div>
-  <h2 class="rv">A clause flagged across many clients isn't a client problem.</h2>
-  <p class="sec-body rv">It's a missing term in <em>your</em> contract. No single review reaches that
-    conclusion — it only exists because every decision was written somewhere queryable.</p>
-  <div class="fig rv">
-    <pre style="font-family:var(--ui);font-size:12px;line-height:1.75;background:var(--accent-soft);
-      border:1px solid var(--line);border-left:2px solid var(--accent);border-radius:var(--r);
-      padding:18px 20px;overflow-x:auto">SELECT f-&gt;&gt;'clause'                AS clause,
-       count(*)                    AS times_flagged,
-       count(DISTINCT client_name) AS clients
+  <div class="f-grid">
+    <pre class="rv">SELECT f-&gt;&gt;'clause'                <b>AS clause</b>,
+       count(*)                    <b>AS times_flagged</b>,
+       count(DISTINCT client_name) <b>AS clients</b>
 FROM   agent_audit_log,
        jsonb_array_elements(decision-&gt;'findings') AS f
 GROUP  BY 1
 ORDER  BY times_flagged DESC;</pre>
-    <div class="figcap"><b>Fig. D</b> — run it yourself over the CockroachDB Cloud MCP Server. The
-      <a href="https://github.com/hemanthreddykoduru/AWS-Hackathon/blob/main/skills/audit-memory/SKILL.md"
-         style="color:var(--accent-deep)">audit-memory Agent Skill</a> ships in the repo.</div>
+    <div class="rv">
+      <div class="out">
+        <div class="out-h"><span>clause</span><span>sev</span><span>flagged</span></div>
+        <div class="out-r"><span>Unlimited revisions</span><span>5</span><span>×20</span></div>
+        <div class="out-r"><span>Payment terms</span><span>5</span><span>×20</span></div>
+        <div class="out-r"><span>No deposit</span><span>4</span><span>×19</span></div>
+        <div class="out-r"><span>Uncapped liability</span><span>4</span><span>×18</span></div>
+      </div>
+      <p class="out-note">Real output from the audit log. Run it yourself over the CockroachDB Cloud
+        MCP Server — the <a href="https://github.com/hemanthreddykoduru/AWS-Hackathon/blob/main/skills/audit-memory/SKILL.md"
+        style="color:var(--accent)">audit-memory Agent Skill</a> ships in the repo with every query
+        pre-written.</p>
+    </div>
   </div>
 </div></section>
 
 <!-- ═════════ FAQ ═════════ -->
-<section class="step-sec" id="faq"><div class="wrap">
-  <div class="eyebrow" style="justify-content:center">FAQ</div>
-  <h2 class="rv" style="margin:0 auto;text-align:center">The questions worth asking.</h2>
-  <div class="faq-list">
-    <div class="faq-item rv"><button class="faq-q">Is there actually an LLM in here?<span class="faq-icon">+</span></button>
-      <div class="faq-a"><p>By default, no — and that is deliberate. The analyser is a deterministic
-        clause engine, so the same contract always produces the same verdict and the demo needs no API
-        key. Because it matches with <code>re.search</code> it knows the exact character offsets of every
-        offending phrase, which is what powers the redline. Set <code>MOCK_MODE=false</code> and a real
-        LLM runs through the same interface. The subject of this project is the memory, not the model.</p></div></div>
-    <div class="faq-item rv"><button class="faq-q">What makes this "agentic memory" rather than RAG?<span class="faq-icon">+</span></button>
-      <div class="faq-a"><p>RAG is the semantic layer alone. Here memory is split three ways — semantic,
-        episodic and procedural — read at different moments and written by different code. The episodic
-        thread means the agent knows what it already conceded to a client; the procedural checkpoints
-        mean it can be killed mid-review and resume.</p></div></div>
-    <div class="faq-item rv"><button class="faq-q">Can I verify the memory is real?<span class="faq-icon">+</span></button>
-      <div class="faq-a"><p>Yes, and that is the point. Connect to the CockroachDB Cloud MCP Server and
-        query <code>agent_audit_log</code> yourself. The repo ships an Agent Skill with every query
-        pre-written and verified against a live cluster.</p></div></div>
-    <div class="faq-item rv"><button class="faq-q">Will it flag everything just to look useful?<span class="faq-icon">+</span></button>
-      <div class="faq-a"><p>No. A fair contract scores <code>0 / accept</code> with zero findings, and
-        <code>sample_data/clean_contract.md</code> exists in the repo to prove it. A reviewer that only
-        ever says reject tells you nothing.</p></div></div>
-    <div class="faq-item rv"><button class="faq-q">Is this legal advice?<span class="faq-icon">+</span></button>
-      <div class="faq-a"><p>No. It flags commercial risk against rules you wrote and drafts a
-        counter-offer. It is not a lawyer, and the scoring weights are hand-tuned — which is marked as
-        such in the source rather than dressed up as science.</p></div></div>
-    <div class="faq-item rv"><button class="faq-q">What does it cost to run?<span class="faq-icon">+</span></button>
-      <div class="faq-a"><p>Nothing. CockroachDB Basic, AWS Lambda, S3, API Gateway and CloudFront are
-        all used inside their free tiers, and the default analyser makes no paid API calls.</p></div></div>
+<section class="clause"><div class="sheet clause-in">
+  <div class="cl-no">05</div>
+  <div class="cl-body">
+    <h2>Questions a reviewer should ask.</h2>
+    <div class="faq">
+      <div class="faq-item"><button class="faq-q">Is there actually an LLM in here?<span class="faq-icon">+</span></button>
+        <div class="faq-a"><p>By default, no — and that is the point. The analyser is a deterministic
+          clause engine, so the same contract always yields the same verdict and the demo needs no API
+          key. Because it matches with <code>re.search</code> it knows the exact character offsets of
+          every offending phrase, which is what makes the redline possible at all. Set
+          <code>MOCK_MODE=false</code> and a real LLM runs through the same interface. The subject of
+          this project is the memory, not the model.</p></div></div>
+      <div class="faq-item"><button class="faq-q">What makes this agentic memory rather than RAG?<span class="faq-icon">+</span></button>
+        <div class="faq-a"><p>RAG is the semantic layer alone. Here memory is split three ways, read at
+          different moments and written by different code. The episodic thread is why the agent knows
+          what it already conceded to a client; the procedural checkpoints are why it can be killed
+          mid-review and resume.</p></div></div>
+      <div class="faq-item"><button class="faq-q">Can I verify the memory is real?<span class="faq-icon">+</span></button>
+        <div class="faq-a"><p>Yes, and you should. Connect to the CockroachDB Cloud MCP Server and query
+          <code>agent_audit_log</code> yourself. Every query in the shipped Agent Skill was run against
+          a live cluster before it was written down.</p></div></div>
+      <div class="faq-item"><button class="faq-q">Does it just flag everything to look useful?<span class="faq-icon">+</span></button>
+        <div class="faq-a"><p>No. A fair contract scores <code>0 / accept</code> with zero findings.
+          <code>sample_data/clean_contract.md</code> exists in the repo for exactly that reason — a
+          reviewer that only ever rejects tells you nothing.</p></div></div>
+      <div class="faq-item"><button class="faq-q">Is this legal advice?<span class="faq-icon">+</span></button>
+        <div class="faq-a"><p>No. It flags commercial risk against rules you wrote, and drafts a
+          counter-offer. It is not a lawyer, and the scoring weights are hand-tuned — marked as such in
+          the source rather than dressed up as science.</p></div></div>
+      <div class="faq-item"><button class="faq-q">What does it cost to run?<span class="faq-icon">+</span></button>
+        <div class="faq-a"><p>Nothing. CockroachDB Basic, AWS Lambda, S3, API Gateway and CloudFront all
+          sit inside their free tiers, and the default analyser makes no paid API calls.</p></div></div>
+    </div>
   </div>
+  <aside class="note rv"><em>Margin note</em>
+    Every claim on this page is something you can run and check.</aside>
 </div></section>
 
-<!-- ═════════ CTA ═════════ -->
-<section class="cta"><div class="wrap">
-  <div class="eyebrow">Try it</div>
+<!-- ═════════ SIGN-OFF ═════════ -->
+<section class="signoff"><div class="sheet">
+  <div class="eyebrow">Sign-off</div>
   <h2 class="rv">Paste a contract. See what it remembers.</h2>
-  <p class="sec-body rv">The sample contract has eleven traps in it. The clean one has none. Same
-    agent, opposite verdicts — no key, no signup.</p>
-  <div class="cta-row rv">
+  <p class="lede rv" style="max-width:560px">The sample has eleven traps planted in it. The clean one
+    has none. Same agent, opposite verdicts, no key and no signup.</p>
+  <div class="row-cta rv">
     <a href="/app" class="btn btn-p">Open the agent</a>
     <a href="/app#/dashboard" class="btn btn-g">See the audit trail</a>
     <a href="https://github.com/hemanthreddykoduru/AWS-Hackathon" class="btn btn-g">Read the source</a>
   </div>
+  <div class="sig">
+    <span>Freelance Guardian · CockroachDB × AWS Hackathon</span>
+    <span>Every figure on this page is a real output.</span>
+  </div>
 </div></section>
 
-<footer><div class="wrap">
+<footer><div class="sheet">
   <div class="foot-grid">
     <div>
       <div class="foot-mark">
@@ -630,7 +553,7 @@ ORDER  BY times_flagged DESC;</pre>
     </div>
     <div><h4>Product</h4>
       <a href="/app">Review a contract</a><a href="/app#/dashboard">Dashboard</a>
-      <a href="#how">How it works</a><a href="#memory">Memory model</a></div>
+      <a href="#reads">Memory model</a><a href="#does">Pipeline</a></div>
     <div><h4>Source</h4>
       <a href="https://github.com/hemanthreddykoduru/AWS-Hackathon">GitHub</a>
       <a href="https://github.com/hemanthreddykoduru/AWS-Hackathon/blob/main/docs/architecture.md">Architecture</a>
@@ -638,8 +561,8 @@ ORDER  BY times_flagged DESC;</pre>
       <a href="https://github.com/hemanthreddykoduru/AWS-Hackathon/blob/main/LICENSE">MIT licence</a></div>
   </div>
   <div class="foot-bottom">
-    <span>CockroachDB × AWS Hackathon · Build with Agentic Memory</span>
-    <span>Every figure on this page is a real output.</span>
+    <span>Build with Agentic Memory</span>
+    <span>Reviewed, redlined and signed off by the agent itself.</span>
   </div>
 </div></footer>
 
@@ -647,25 +570,24 @@ ORDER  BY times_flagged DESC;</pre>
 
 <script src="/theme.js"></script>
 <script>
-// Empty = same origin (local server). scripts/build_site.sh rewrites this to the
-// API Gateway base URL for the static S3 deployment, where there is no server.
-const API = '';
+const API = '';   // build_site.sh rewrites this to the API Gateway base for the static build
 const esc = s => String(s ?? '').replace(/[&<>"']/g,
   c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* ───────── chrome: progress bar, nav shadow, back to top ───────── */
-const prog = document.getElementById('prog'), nav = document.getElementById('nav'),
-      toTop = document.getElementById('toTop');
+/* ───────── the pen line: reading progress drawn down the margin ───────── */
+const pen = document.querySelector('#pen i'), nib = document.querySelector('#pen b'),
+      nav = document.getElementById('nav'), toTop = document.getElementById('toTop');
 addEventListener('scroll', () => {
   const h = document.documentElement;
-  prog.style.width = (h.scrollTop / (h.scrollHeight - h.clientHeight) * 100) + '%';
+  const p = h.scrollTop / (h.scrollHeight - h.clientHeight);
+  pen.style.height = (p * 100) + '%';
+  nib.style.top = (p * 100) + '%';
   nav.classList.toggle('scrolled', scrollY > 8);
   toTop.classList.toggle('show', scrollY > 600);
 }, {passive: true});
 toTop.addEventListener('click', () => scrollTo({top: 0, behavior: 'smooth'}));
 
-/* ───────── reveal on approach ───────── */
 const io = new IntersectionObserver(es => es.forEach(e => {
   if (!e.isIntersecting) return;
   e.target.classList.add('on');
@@ -673,9 +595,9 @@ const io = new IntersectionObserver(es => es.forEach(e => {
 }), {threshold: .15, rootMargin: '0px 0px -40px'});
 document.querySelectorAll('.rv').forEach(el => io.observe(el));
 
-/* ───────── live counts ─────────
-   countTo only animates toward a value the API returned. A failed fetch leaves the
-   cell blank rather than counting to a number nobody measured. */
+/* ───────── the ledger ─────────
+   countTo only ever animates toward a value the API returned. A failed fetch blanks
+   the cell rather than counting to a number nobody measured. */
 function countTo(el, target) {
   if (reduced) { el.textContent = target; return; }
   const t0 = performance.now();
@@ -702,118 +624,84 @@ function countTo(el, target) {
   }
 })();
 
-/* ───────── the demo window ─────────
-   A replay of verdicts this agent actually produces on the contracts in sample_data/,
-   with the trace naming the real LangGraph nodes. Nothing here is aspirational. */
-const SCEN = {
+/* ───────── the document marks itself up ─────────
+   Verdicts this agent actually produces on the contracts in sample_data/. The strike
+   wipes across each phrase in sequence, the way a pen moves down a page. */
+const DOCS = {
   risky: {
-    doc: `2. REVISIONS
-Client is entitled to <mark>unlimited revisions</mark> until Client is fully satisfied in Client's <mark>sole discretion</mark>.
-
-3. COMPENSATION
-Total fee USD 6,000, payable <mark>Net 60</mark> following written acceptance. <mark>No deposit</mark> shall be made.`,
-    steps: [
-      ['t-in', 'INGEST',   'archived to S3 · split into 10 clauses'],
-      ['t-rt', 'RETRIEVE', 'per-clause vector search → 6 rules, 6 past risks'],
-      ['t-rt', 'RETRIEVE', 'guardian_chat_history → prior messages loaded'],
-      ['t-an', 'ANALYSE',  '11 risky clauses matched · spans recorded'],
-      ['t-gp', 'GAP',      'portfolio rights → contract is silent'],
-      ['t-sv', 'SAVE',     'audit row + client thread + checkpoint'],
+    name: 'apex-dynamics-llc · independent contractor agreement',
+    clauses: [
+      ['2. REVISIONS', 'Client is entitled to ', 'unlimited revisions', ' until Client is fully satisfied in Client’s ', 'sole discretion', '.'],
+      ['3. COMPENSATION', 'Total fee USD 6,000, payable ', 'Net 60', ' following written acceptance. ', 'No deposit', ' shall be made.'],
+      ['4. INTELLECTUAL PROPERTY', 'All work product shall be the property of Client ', 'immediately upon creation', ', whether or not payment has been made.'],
     ],
-    reply: 'Thanks for sending the agreement. There are 12 points I need adjusted before I can sign — starting with unlimited revisions, Net 60 payment, and IP assigning before payment clears.',
-    pill: ['rej', '96 · REJECT AS WRITTEN · 12 findings'],
-    meta: 'sample_data/risky_contract.txt · deterministic · reproducible',
+    chip: ['rej', '96 · REJECT'],
+    foot: ['Recalled', 'Never transfer copyright before final payment clears — your rule, and the reason Halcyon Media never paid.'],
   },
   clean: {
-    doc: `3. FEE AND PAYMENT
-A deposit of 30% is due before work begins. Invoices are payable Net 30 from the invoice date.
-
-5. INTELLECTUAL PROPERTY
-Rights assign to the Client on receipt of final cleared payment.
-
-6. PORTFOLIO
-The Contractor may display non-confidential work in a portfolio.`,
-    steps: [
-      ['t-in', 'INGEST',   'archived to S3 · split into 11 clauses'],
-      ['t-rt', 'RETRIEVE', 'per-clause vector search → rules recalled'],
-      ['t-an', 'ANALYSE',  '0 risky clauses matched'],
-      ['t-an', 'ANALYSE',  'all 14 standing rules satisfied'],
-      ['t-sv', 'SAVE',     'audit row written · nothing to counter'],
+    name: 'northwind-studio · independent contractor agreement',
+    clauses: [
+      ['3. FEE AND PAYMENT', 'A deposit of 30% is due before work begins. Invoices are payable Net 30 from the invoice date.'],
+      ['5. INTELLECTUAL PROPERTY', 'Rights assign to the Client on receipt of final cleared payment.'],
+      ['6. PORTFOLIO', 'The Contractor may display non-confidential work in a portfolio and in case studies.'],
     ],
-    reply: 'Thanks for sending this over — the terms look fine to me and I\'m happy to sign as drafted.',
-    pill: ['acc', '0 · ACCEPT AS WRITTEN · 0 findings'],
-    meta: 'sample_data/clean_contract.md · a reviewer that only rejects proves nothing',
+    chip: ['acc', '0 · ACCEPT'],
+    foot: ['Checked', 'All 14 standing rules satisfied. Nothing to counter — a reviewer that only rejects proves nothing.'],
   },
   gaps: {
-    doc: `5. PROJECT FEE
-Invoices payable within <mark>[7/15/30] days</mark> of receipt.
-
-17. TERMINATION
-The Client may terminate for convenience on <mark>[7/15/30] days'</mark> notice.
-
-(no clause mentions portfolio rights, late-payment interest, or a kill fee)`,
-    steps: [
-      ['t-in', 'INGEST',   'archived to S3 · split into clauses'],
-      ['t-rt', 'RETRIEVE', 'per-clause vector search → 6 rules, 6 past risks'],
-      ['t-an', 'ANALYSE',  '0 risky clauses matched — well drafted'],
-      ['t-gp', 'GAP',      'portfolio rights · late-payment remedy · kill fee'],
-      ['t-gp', 'GAP',      '61 placeholders still blank'],
-      ['t-sv', 'SAVE',     'audit row + client thread + checkpoint'],
+    clauses: [
+      ['5. PROJECT FEE', 'Invoices shall be payable within ', '[7/15/30] days', ' of receipt.'],
+      ['17. TERMINATION', 'The Client may terminate for convenience on ', '[7/15/30] days’', ' written notice.'],
+      ['—', 'No clause mentions portfolio rights, late-payment interest, or a kill fee.'],
     ],
-    reply: 'Thanks for the draft. Nothing here is unfair, but four things are missing before I can sign — portfolio rights, late-payment interest, a kill fee, and the blanks filled in.',
-    pill: ['neg', '60 · NEGOTIATE · 4 findings, all gaps'],
-    meta: 'the dangerous contract is the one that looks fine',
+    name: 'draft-template · independent contractor agreement',
+    chip: ['neg', '60 · NEGOTIATE'],
+    foot: ['Missing', 'Portfolio rights · late-payment remedy · kill fee. Nothing here is unfair; four things simply are not written.'],
   },
 };
 
-const dchat = document.getElementById('dchat'), dsteps = document.getElementById('dsteps'),
-      dmeta = document.getElementById('dmeta'), dbrain = document.getElementById('dbrain');
+const dbody = document.getElementById('dbody'), dfoot = document.getElementById('dfoot'),
+      chip = document.getElementById('chip'), dhName = document.getElementById('dh-name');
 let timers = [];
 
-function play(key) {
+function render(key) {
   timers.forEach(clearTimeout); timers = [];
-  dchat.innerHTML = '<div class="who-l">contract ↔ verdict</div>';
-  dsteps.innerHTML = ''; dmeta.style.display = 'none';
-  const s = SCEN[key];
+  const d = DOCS[key];
+  dhName.textContent = d.name;
+  chip.className = 'verdict-chip ' + d.chip[0];
+  chip.textContent = d.chip[1];
+  dfoot.innerHTML = '';
 
-  const doc = document.createElement('div');
-  doc.className = 'bub doc';
-  // Escape first, then re-allow only our own <mark> — nothing else survives.
-  doc.innerHTML = esc(s.doc).replace(/&lt;mark&gt;/g, '<mark>').replace(/&lt;\/mark&gt;/g, '</mark>');
-  dchat.appendChild(doc);
+  // Odd positions are struck; even positions are plain. Everything is escaped.
+  dbody.innerHTML = d.clauses.map(([label, ...parts]) =>
+    `<p><span class="cl">${esc(label)}</span>` +
+    parts.map((t, i) => i % 2 ? `<s>${esc(t)}</s>` : esc(t)).join('') +
+    `</p>`).join('');
 
-  const gap = reduced ? 0 : 620;
-  s.steps.forEach((st, i) => timers.push(setTimeout(() => {
-    const d = document.createElement('div');
-    d.className = 'dstep on';
-    d.innerHTML = `<span class="tag ${esc(st[0])}">${esc(st[1])}</span><span>${esc(st[2])}</span>`;
-    dsteps.appendChild(d);
-    dbrain.scrollTop = 9999;
-  }, 350 + i * gap)));
+  const strikes = [...dbody.querySelectorAll('s')];
+  const step = reduced ? 0 : 420;
+  strikes.forEach((s, i) => timers.push(setTimeout(() => s.classList.add('struck'), 500 + i * step)));
 
   timers.push(setTimeout(() => {
-    const a = document.createElement('div');
-    a.className = 'bub agent'; a.textContent = s.reply; dchat.appendChild(a);
-    const p = document.createElement('div');
-    p.className = 'status-pill ' + s.pill[0]; p.textContent = s.pill[1]; dchat.appendChild(p);
-    dmeta.textContent = s.meta; dmeta.style.display = 'block';
-    dchat.scrollTop = 9999;
-  }, 350 + s.steps.length * gap + 250));
+    chip.classList.add('on');
+    dfoot.innerHTML = `<em>${esc(d.foot[0])}</em>`;
+    dfoot.append(d.foot[1]);
+  }, 500 + strikes.length * step + 260));
 }
 
-document.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
-  document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
-  ch.classList.add('active');
-  play(ch.dataset.s);
+document.querySelectorAll('.dtab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.dtab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  render(t.dataset.s);
 }));
 
-// Start the replay only once the window is actually on screen.
+// Only start marking up once the document is actually on screen.
 const dio = new IntersectionObserver(es => es.forEach(e => {
   if (!e.isIntersecting) return;
-  play('risky');
+  render('risky');
   dio.unobserve(e.target);
-}), {threshold: .35});
-dio.observe(document.querySelector('.demo-win'));
+}), {threshold: .3});
+dio.observe(document.querySelector('.doc'));
 
 /* ───────── FAQ ───────── */
 document.querySelectorAll('.faq-q').forEach(q => q.addEventListener('click', () => {
