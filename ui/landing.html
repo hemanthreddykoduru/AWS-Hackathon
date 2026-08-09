@@ -19,9 +19,8 @@
      The product's one distinctive act is the redline — striking the offending
      words inside the document rather than listing complaints beside it. So the
      page is laid out as a document under review: a pen line runs down the left
-     gutter as you scroll, sections are numbered like clauses, and the agent
-     annotates them in the margin in red pen. Every structural device here means
-     something about contract review; none of it is decoration.
+     gutter as you scroll and sections are numbered like clauses. Every structural
+     device here means something about contract review; none of it is decoration.
      ═══════════════════════════════════════════════════════════════════════════ */
 
   html{scroll-behavior:smooth;scroll-padding-top:80px}
@@ -48,19 +47,13 @@
 
   /* ---- clause layout: number + rule in the gutter, body to the right ---- */
   .clause{padding:84px 0;border-bottom:1px solid var(--line);position:relative}
-  .clause-in{display:grid;grid-template-columns:112px minmax(0,1fr) 200px;gap:40px;align-items:start}
+  .clause-in{display:grid;grid-template-columns:112px minmax(0,1fr);gap:44px;align-items:start}
   .cl-no{font-family:var(--ui);font-size:12px;color:var(--accent);letter-spacing:.1em;
     padding-top:6px;position:sticky;top:96px}
   .cl-no::after{content:"";display:block;width:28px;height:1px;background:var(--line);margin-top:12px}
   .cl-body h2{font-size:33px;max-width:640px}
   .cl-body .lede-s{color:var(--muted);margin-top:16px;max-width:600px;font-size:16px}
   .cl-body .lede-s b{color:var(--ink);font-weight:600}
-
-  /* the agent's voice, in the margin, in pen */
-  .note{font-family:var(--ui);font-size:11.5px;line-height:1.65;color:var(--no);
-    border-left:2px solid var(--no);padding:2px 0 2px 12px;margin-top:8px;position:sticky;top:96px}
-  .note em{display:block;font-style:normal;color:var(--muted);font-size:10px;letter-spacing:.1em;
-    text-transform:uppercase;margin-bottom:5px}
 
   /* ---- hero ---- */
   .hero{padding:76px 0 68px;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
@@ -265,7 +258,6 @@
 
   @media (max-width:1080px){
     .clause-in{grid-template-columns:88px minmax(0,1fr)}
-    .note{grid-column:2;position:static;margin-top:26px;max-width:520px}
     .cl-no{position:static}
   }
   @media (max-width:900px){
@@ -362,9 +354,6 @@
         <p>State written after each node. Killed mid-run, it resumes.</p>
         <code>checkpoints</code><b>4 nodes</b></div>
     </div>
-
-  <aside class="note rv"><em>Margin note</em>
-    Three memories, one cluster. A judge can open it and read every one.</aside>
 </div></section>
 
 <!-- ═════════ CLAUSE 2 — WHAT IT DOES ═════════ -->
@@ -404,9 +393,6 @@
       <div class="figcap"><b>Fig. 1</b> — each arrow is a checkpoint boundary.</div>
     </div>
   </div>
-  <aside class="note rv"><em>Margin note</em>
-    Retrieval runs once per clause. One query for a whole contract averages every
-    clause together and the specific hits wash out.</aside>
 </div></section>
 
 <!-- ═════════ CLAUSE 3 — WHAT IT NOTICES ═════════ -->
@@ -443,13 +429,11 @@
         <circle class="pulse-dot" r="3.4"><animateMotion dur="5s" repeatCount="indefinite"
           path="M0,110 L445,122 C486,130 496,172 530,176 L730,176 C778,172 778,126 810,114"/></circle>
       </svg>
-      <div class="figcap"><b>Fig. 2</b> — vector search returns rules that resemble what the contract
-        <em>says</em>, so a missing protection can never surface that way.</div>
+      <div class="figcap"><b>Fig. 2</b> — vector search returns rules resembling what the contract
+        <em>says</em>, so a missing protection can never surface that way. A template still full of
+        [7/15/30] blanks cannot be "accepted as written" either — it isn't written yet.</div>
     </div>
   </div>
-  <aside class="note rv"><em>Margin note</em>
-    A template still full of <span style="white-space:nowrap">[7/15/30]</span> blanks
-    cannot be "accepted as written". It isn't written yet.</aside>
 </div></section>
 
 <!-- ═════════ CLAUSE 4 — WHAT IT REMEMBERS ═════════ -->
@@ -496,8 +480,6 @@
       <code style="font-family:var(--ui)">scripts/test_graph.py</code> run twice. The test fails if
       any of these stops growing.</p>
   </div>
-  <aside class="note rv"><em>Margin note</em>
-    Nothing here is a screenshot. Run the script yourself; it asserts every row.</aside>
 </div></section>
 
 <!-- ═════════ THE FINDING ═════════ -->
@@ -566,8 +548,6 @@ ORDER  BY times_flagged DESC;</pre>
           sit inside their free tiers, and the default analyser makes no paid API calls.</p></div></div>
     </div>
   </div>
-  <aside class="note rv"><em>Margin note</em>
-    Every claim on this page is something you can run and check.</aside>
 </div></section>
 
 <!-- ═════════ SIGN-OFF ═════════ -->
